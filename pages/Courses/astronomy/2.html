@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Space School | Astronomy 2</title>
+    <script>
+      (function() {
+        const path = location.pathname.replace(/\/$/, '');
+        const parts = path.split('/').filter(Boolean);
+        const isFile = parts.length && /\.[^/]+$/.test(parts[parts.length - 1]);
+        const depth = isFile ? parts.length - 1 : parts.length;
+        const base = depth === 0 ? './' : '../'.repeat(depth);
+        const baseEl = document.createElement('base');
+        baseEl.href = base;
+        document.head.prepend(baseEl);
+      })();
+    </script>
+    <link rel="stylesheet" href="assets/style.css" />
+    <link rel="icon" href="assets/logo.png" />
+    <!-- <meta name="description" content="Add a short summary here" /> -->
+  </head>
+  <body>
+    <header>
+      <div class="site-brand">
+        <a href="index.html"><img src="assets/logo.png" alt="Space School logo" class="logo" /></a>
+        <h1>Space School</h1>
+      </div>      
+      <div id="topbar"></div>    
+    </header>
+
+    <main class="container">
+      <article class="page-template">
+        <h2>Astronomy 2</h2>
+        <p class="page-description">Welcome to Astronomy 2! This course will build upon the fundamentals introduced in Astronomy 1 and delve deeper into the study of space and celestial phenomena.</p>
+
+        <section class="content-block">
+          <h3>Astronomy Basics</h3>
+          <p>What Is Astornomy? Astronomy is the scientific study of celestial objects, space, and the universe as a whole. It encompasses the observation and analysis of stars, planets, galaxies, and other cosmic phenomena. In this course, we will explore the history of astronomy, key concepts such as light and gravity, and the tools astronomers use to study the cosmos.</
+          </p>
+        </section>
+
+        <section class="content-block">
+          <h3>Astronomy Applications</h3>
+          <p>Astronomy has many practical applications, from navigation and timekeeping to the development of new technologies. In this section, we will explore how astronomical knowledge is used in various fields and industries.</p>
+          <ul>
+            <li><strong>Navigation:</strong> Astronomical observations have been used for centuries to navigate the seas and skies. The positions of stars and planets help determine location and direction.</li>
+            <li><strong>Timekeeping:</strong> The movement of celestial bodies has been used to create calendars and keep time. For example, the phases of the moon have been used to track months.</li>
+            <li><strong>Technology Development:</strong> Advances in astronomy have led to the development of new technologies, such as telescopes, satellites, and space exploration vehicles.</li>
+          </ul>
+        </section>
+        <section class="content-block">
+          <h3>Course Structure</h3>
+          <p>YOU HAVE JUST FINISHED MODULE 1!</p>
+          <ul>
+            <li class="finish"><strong>Module 1:</strong> Introduction to Astronomy</li>
+            <li><strong>Module 2:</strong> The Solar System</li>
+            <li><strong>Module 3:</strong> Stars and Galaxies</li>
+            <li><strong>Module 4:</strong> Cosmology and the Universe</li>
+          </ul>
+        </section>
+        <section class="content-block">
+          <h3>Getting Started</h3>
+          <p>To get the most out of this course, we recommend the following resources:</p>
+          <ul>
+            <li><a href="https://www.nasa.gov/">NASA's Official Website</a> - A wealth of information about space missions, research, and educational resources.</li>
+            <li><a href="https://www.esa.int/">European Space Agency (ESA)</a> - Learn about ESA's missions and research in space science.</li>
+            <li><a href="https://www.space.com/astronomy">Space.com Astronomy Section</a> - Stay updated with the latest news and discoveries in astronomy.</li>
+          </ul>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <p>&copy; Space School 2026</p>
+    </footer>
+
+    <script type="module" src="/scripts/main.js"></script>
+  </body>
+</html>
+

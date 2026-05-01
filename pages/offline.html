@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space School - Offline</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a1428 0%, #0d1f2d 100%);
+        }
+        .offline-container {
+            text-align: center;
+            color: #fff;
+            max-width: 500px;
+            padding: 40px 20px;
+        }
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #71c0fc;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #a0aec0;
+        }
+        .offline-message {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #71c0fc;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .offline-tips {
+            text-align: left;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+        .offline-tips h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #71c0fc;
+        }
+        .offline-tips ul {
+            list-style: none;
+            padding: 0;
+        }
+        .offline-tips li {
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .offline-tips li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #71c0fc;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .offline-icon {
+                animation: float 3s ease-in-out infinite;
+            }
+        }
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <h1>You're Offline</h1>
+        <p>Space School is loading without internet connection</p>
+        
+        <div class="offline-message">
+            <strong>Good news!</strong> Some content may still be available from your cache.
+        </div>
+        
+        <div class="offline-tips">
+            <h2>What you can do:</h2>
+            <ul>
+                <li>Previously visited pages may still load</li>
+                <li>Check your internet connection</li>
+                <li>Try refreshing the page</li>
+                <li>Return to the home page</li>
+            </ul>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 14px; color: #718096;">
+            <a href="../index.html" style="color: #71c0fc; text-decoration: none;">← Back to Home</a>
+        </p>
+    </div>
+</body>
+</html>
+

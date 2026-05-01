@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Space School — [Page Title]</title>
+    <script>
+      (function() {
+        const path = location.pathname.replace(/\/$/, '');
+        const parts = path.split('/').filter(Boolean);
+        const isFile = parts.length && /\.[^/]+$/.test(parts[parts.length - 1]);
+        const depth = isFile ? parts.length - 1 : parts.length;
+        const base = depth === 0 ? './' : '../'.repeat(depth);
+        const baseEl = document.createElement('base');
+        baseEl.href = base;
+        document.head.prepend(baseEl);
+      })();
+    </script>
+    <link rel="stylesheet" href="assets/style.css" />
+    <link rel="icon" href="assets/logo.png" />
+    <!-- <meta name="description" content="Add a short summary here" /> -->
+  </head>
+  <body>
+    <header>
+      <div class="site-brand">
+        <a href="index.html"><img src="assets/logo.png" alt="Space School logo" class="logo" /></a>
+        <h1>Space School</h1>
+      </div>      
+      <div id="topbar"></div>    
+    </header>
+
+    <main class="container">
+      <article class="page-template">
+        <h2>[Page Heading]</h2>
+        <p class="page-description">[Insert a short introduction for this page]</p>
+
+        <section class="content-block">
+          <h3>Section title</h3>
+          <p>[Replace this placeholder text with your page content.]</p>
+        </section>
+
+        <section class="content-block">
+          <h3>Another section</h3>
+          <p>[Add more content blocks, images, lists, or links as needed.]</p>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <p>&copy; Space School</p>
+    </footer>
+
+    <script type="module" src="/scripts/main.js"></script>
+  </body>
+</html>
+

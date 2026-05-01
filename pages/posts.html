@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Space School | Posts</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+    <link rel="icon" href="/assets/logo.png" />
+</head>
+
+<body>
+    <header>
+      <div class="site-brand">
+        <a href="/index.html"><img src="/assets/logo.png" alt="Space School logo" class="logo" width="21" height="21" /></a>
+        <h1>Space School | Posts</h1>
+      </div>      
+      <div id="topbar"></div>    
+    </header>
+
+    <main class="container">
+        <article class="page-template">
+            <h2>Post</h2>
+            <p class="page-description">Discover New Posts From The Makers Of Space School</p>
+
+            <section class="content-block">
+                <h3>Post Editor</h3>
+
+                <div id="admin-controls" style="margin-bottom: 20px;">
+                    <input type="text" id="postTitle" placeholder="Enter title..."
+                        style="display:block; width:100%; margin-bottom: 10px;">
+                    <textarea id="postContent" placeholder="Enter post content..."
+                        style="display:block; width:100%; margin-bottom: 10px;"></textarea>
+                    <button id="addPostBtn">Add Post</button>
+                </div>
+
+                <div id="posts-container">
+                </div>
+            </section>
+            <section class="content-block-hidden">
+                <div class="congrats-message">
+                    🎉 Congratulations! You have just finished reading POsts Section! 🎉<br>
+                    Great job exploring the wonders of space. Keep learning and discovering!
+                </div>
+            </section>
+        </article>
+    </main>
+
+    <footer>
+        <p>&copy; Space School</p>
+    </footer>
+
+    <script type="module" src="/scripts/main.js"></script>
+
+    <!-- Scroll indicator script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hiddenBlocks = document.querySelectorAll('.content-block-hidden');
+            let hasShownCongrats = false;
+
+            function checkScroll() {
+                if (hasShownCongrats) return;
+
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+
+                // If scrolled to within 100px of bottom
+                if (scrollTop + windowHeight >= documentHeight - 100) {
+                    hiddenBlocks.forEach(block => {
+                        block.classList.add('visible');
+                    });
+                    hasShownCongrats = true;
+                    window.removeEventListener('scroll', checkScroll);
+                }
+            }
+
+            window.addEventListener('scroll', checkScroll);
+        });
+    </script>
+</body>
+
+</html>
