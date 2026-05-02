@@ -27,8 +27,8 @@
 
     <script src="/scripts/main.js" type="module"></script>
     <script type="module">
-        // Import the logic directly from your Hub (ensure the path is correct)
-        import { auth, handleEmailLinkSignIn } from "/script/auth.js";
+        /// Use an absolute path to the root's script folder
+        import { auth, handleEmailLinkSignIn } from "/scripts/auth.js";
 
         const statusEl = document.getElementById("status");
         const msgEl = document.getElementById("message");
