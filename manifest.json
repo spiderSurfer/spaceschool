@@ -1,6 +1,6 @@
 {
   "name": "Space School",
-  "short_name": "SpaceSchool",
+  "short_name": "Space School",
   "description": "An educational platform to inspire and educate about space",
   "start_url": "/index.html",
   "display": "standalone",
@@ -69,6 +69,12 @@
           "type": "image/jpeg"
         }
       ]
+    },
+    {
+      "name": "Privacy Policy",
+      "short_name": "Privacy",
+      "description": "Privacy Policy Verfication",
+      "url": "/pages/privacypolicy.html"
     }
   ]
 }

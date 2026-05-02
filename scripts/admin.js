@@ -1,26 +1,17 @@
 const adminCode = 'Admin321';
 
-function renderAdminTools(container) {
-  if (!container) return;
-  container.innerHTML = `
-    <div class="admin-tools">
-      <h2>Admin Tools</h2>
-      <button id="addContentBtn">Add Content</button>
-      <button id="editContentBtn">Edit Content</button>
-      <button id="deleteContentBtn">Delete Content</button>
-      <button id="manageUsersBtn">Manage Users</button>
-      <button id="viewAnalyticsBtn">View Analytics</button>
-      <button id="siteSettingsBtn">Site Settings</button>
-      <button id="lPostAdminBtn">Add Post</button>
-    </div>
-  `;
-
-  // Add event listeners for admin tools
-  setTimeout(() => {
-    initAdminTools();
-  }, 100);
+// --- Helper: Check Admin Status ---
+function checkAdminSession() {
+  return localStorage.getItem('isAdmin') === 'true';
 }
 
+// Add a logout function for convenience
+export function logoutAdmin() {
+  localStorage.setItem('isAdmin', 'false');
+  location.reload(); // Refresh to clear everything
+}
+
+// ... rest of your functions (renderAdminTools, displayPosts, etc) ...
 function initAdminTools() {
   const addPostBtn = document.getElementById('lPostAdminBtn');
   if (addPostBtn) {
@@ -75,6 +66,77 @@ function initAdminTools() {
 
 function showAddPostModal() {
   // Create modal overlay
+function initAdminTools() {
+  const addPostBtn = document.getElementById('lPostAdminBtn');
+  if (addPostBtn) {
+    addPostBtn.addEventListener('click', () => {
+      showAddPostModal();
+    });
+  }
+
+  // Add other button handlers as needed
+  const addContentBtn = document.getElementById('addContentBtn');
+  if (addContentBtn) {
+    addContentBtn.addEventListener('click', () => {
+      alert('Add Content feature coming soon!');
+    });
+  }
+
+  const editContentBtn = document.getElementById('editContentBtn');
+  if (editContentBtn) {
+    editContentBtn.addEventListener('click', () => {
+      alert('Edit Content feature coming soon!');
+    });
+  }
+
+  const deleteContentBtn = document.getElementById('deleteContentBtn');
+  if (deleteContentBtn) {
+    deleteContentBtn.addEventListener('click', () => {
+      alert('Delete Content feature coming soon!');
+    });
+  }
+
+  const manageUsersBtn = document.getElementById('manageUsersBtn');
+  if (manageUsersBtn) {
+    manageUsersBtn.addEventListener('click', () => {
+      alert('Manage Users feature coming soon!');
+    });
+  }
+
+  const viewAnalyticsBtn = document.getElementById('viewAnalyticsBtn');
+  if (viewAnalyticsBtn) {
+    viewAnalyticsBtn.addEventListener('click', () => {
+      alert('View Analytics feature coming soon!');
+    });
+  }
+
+  const siteSettingsBtn = document.getElementById('siteSettingsBtn');
+  if (siteSettingsBtn) {
+    siteSettingsBtn.addEventListener('click', () => {
+      alert('Site Settings feature coming soon!');
+    });
+  }
+}
+function renderAdminTools(container) {
+  if (!container) return;
+  container.innerHTML = `
+    <div class="admin-tools">
+      <h2>Admin Tools</h2>
+      <button id="addContentBtn">Add Content</button>
+      <button id="editContentBtn">Edit Content</button>
+      <button id="deleteContentBtn">Delete Content</button>
+      <button id="manageUsersBtn">Manage Users</button>
+      <button id="viewAnalyticsBtn">View Analytics</button>
+      <button id="siteSettingsBtn">Site Settings</button>
+      <button id="lPostAdminBtn">Add Post</button>
+    </div>
+  `;
+
+  // Add event listeners for admin tools
+  setTimeout(() => {
+    initAdminTools();
+  }, 100);
+}
   const modal = document.createElement('div');
   modal.style.cssText = `
     position: fixed;
@@ -240,12 +302,31 @@ export function displayPosts() {
     });
 }
 export function initAdmin() {
+  const adminTools = document.getElementById('admintools');
   const checker = document.getElementById('AdminChecker');
+  
+  // 1. Auto-Check: If already logged in, render tools immediately
+  if (checkAdminSession()) {
+    renderAdminTools(adminTools);
+    if (checker) checker.style.display = 'none'; // Hide input if already admin
+  }
+
+  // 2. Password Entry: Only run if checker exists
   if (!checker) return;
+
+  checker.addEventListener('input', () => {
+    if (checker.value === adminCode) {
+      localStorage.setItem('isAdmin', 'true'); // Save session
+      alert('Admin access granted!');
+      renderAdminTools(adminTools);
+      checker.style.display = 'none'; // Hide input after success
+    }
+  });
+}
 
   const adminTools = document.getElementById('admintools');
   let isAdmin = false;
-
+  const checker = document.getElementById('AdminChecker');
   checker.addEventListener('input', () => {
     if (checker.value === adminCode && !isAdmin) {
       isAdmin = true;
@@ -253,4 +334,3 @@ export function initAdmin() {
       renderAdminTools(adminTools);
     }
   });
-}

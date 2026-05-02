@@ -1,23 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Space School — PLACEHOLDER</title>
-    <link rel="stylesheet" href="../assets/style.css" />
-    <link rel="icon" href="../assets/logo.png" />
-  </head>
-  <body>
-    <header>
-      <h1>Space School</h1>
-      <nav><a href="../index.html">Home</a></nav>
-    </header>
-    <main class="container">
-      <h2>PLACEHOLDER</h2>
-      <p class="placeholder">Placeholder: Add content for this page.</p>
-    </main>
-    <footer><p>&copy; Space School</p></footer>
-    <script type="module" src="/scripts/main.js"></script>
-  </body>
-</html>
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space School | Auth Gateway</title>
+    <link rel="stylesheet" href="../assets/style.css" />
+    <style>
+        .container {
+            text-align: center;
+            margin-top: 50px;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Space School</h1>
+    </header>
+
+    <main class="container">
+        <h2 id="status">Verifying credentials...</h2>
+        <p id="message">Please wait while the engine connects to the Space School gateway.</p>
+    </main>
+
+    <script src="/scripts/main.js" type="module"></script>
+    <script type="module">
+        // Import the logic directly from your Hub (ensure the path is correct)
+        import { auth, handleEmailLinkSignIn } from "/scripts/auth.js";
+
+        const statusEl = document.getElementById("status");
+        const msgEl = document.getElementById("message");
+
+        // Run the logic from your auth.js hub
+        handleEmailLinkSignIn()
+            .then((result) => {
+                if (result) {
+                    statusEl.innerText = "Access Granted!";
+                    msgEl.innerText = "Welcome aboard. Redirecting...";
+                    setTimeout(() => window.location.href = '/index.html', 1500);
+                } else {
+                    statusEl.innerText = "No Link Found";
+                    msgEl.innerText = "Please use the magic link sent to your email.";
+                }
+            })
+            .catch((error) => {
+                statusEl.innerText = "Access Denied";
+                msgEl.innerText = error.message;
+                console.error("Auth Error:", error);
+            });
+    </script>
+</body>
+
+</html>

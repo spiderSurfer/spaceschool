@@ -181,5 +181,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 		}
 	});
 });
+const checker = document.getElementById('AdminChecker');
+
+checker.addEventListener('keydown', (event) => {
+    // 1. Check if the pressed key is "Enter"
+    if (event.key === 'Enter') {
+        // 2. Run your verification logic
+        if (checker.value === adminCode) {
+            console.log('Access Granted!');
+            // Call your function here
+            renderAdminTools(document.getElementById('admintools'));
+        } else {
+            alert('Incorrect Code!');
+        }
+    }
+});
 window.onload = displayPosts;
 window.addEventListener('DOMContentLoaded', displayPosts);
