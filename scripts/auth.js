@@ -123,18 +123,16 @@ export async function signOutUser() {
  * @returns {Promise<void>}
  * @throws {Error} If email sending fails
  */
+// In auth.js - Update this function
 export async function sendPasswordlessSignInLink(email) {
-  try {
-    const actionCodeSettings = {
-      url: window.location.origin + window.location.pathname,
-      handleCodeInApp: true
-    };
-    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-    window.localStorage.setItem('emailForSignIn', email);
-  } catch (error) {
-    console.error('[Auth] Passwordless link send error:', error.code, error.message);
-    throw new Error(`Failed to send sign-in link: ${error.message}`);
-  }
+  const actionCodeSettings = {
+    // This must match your hosted URL exactly
+    url: 'https://spaceyschool.netlify.app/signin.html', 
+    handleCodeInApp: true, // IMPORTANT: This tells Firebase to let YOU handle the redirect
+  };
+  
+  await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+  window.localStorage.setItem('emailForSignIn', email);
 }
 
 /**
