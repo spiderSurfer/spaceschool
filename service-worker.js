@@ -53,6 +53,28 @@ const ASSETS_TO_CACHE = [
 	'/pages/spacemission.html',
 	'/pages/stars.html',
 	'/pages/sun.html',
+	'/pages/Courses/astronomy/astronomy.html',
+	'/pages/Courses/astronomy/1.html',
+	'/pages/Courses/astronomy/2.html',
+	'/pages/Courses/astronomy/3.html',
+	'/pages/Courses/astronomy/4.html',
+	'/pages/Courses/astronomy/5.html',
+	'/pages/Courses/technologydev/techdev.html',
+	'/pages/Courses/technologydev/1.html',
+	'/pages/Courses/technologydev/2.html',
+	'/pages/Courses/technologydev/3.html',
+	'/pages/Courses/technologydev/4.html',
+	'/pages/Courses/technologydev/5.html',
+	'/pages/Courses/test/techdev.html',
+	'/pages/Courses/test/astronomy.html',
+	'/pages/Courses/test/blackhole.html',
+	'/pages/Courses/test/stars.html',
+	'/pages/Courses/test/planets.html',
+	'/pages/Courses/test/solarsystem.html',
+	'/pages/Courses/test/missions.html',
+	'/pages/Courses/test/moon.html',
+	'/pages/Courses/test/creationtool.html',
+	'https://sketchfab.com/models/74cbeaeae2174a218fe9455d77902b5c/embed?autospin=1&autostart=1',
 	'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
 	'https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js',
 	'https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js'
@@ -131,7 +153,8 @@ self.addEventListener('fetch', (event) => {
 		url.pathname === '/logo.png' ||
 		url.pathname.startsWith('/assets/') ||
 		url.pathname.startsWith('/scripts/') ||
-		url.pathname.startsWith('/pages/')
+		url.pathname.startsWith('/pages/') ||
+		url.pathname.startWith('/Courses/')
 	) {
 		event.respondWith(
 			caches.match(request)
@@ -167,7 +190,7 @@ self.addEventListener('fetch', (event) => {
 							if (url.pathname === '/manifest.json') {
 								return new Response(JSON.stringify({
 									name: 'Space School',
-									short_name: 'SpaceSchool',
+									short_name: 'Space School',
 									description: 'An educational platform to inspire and educate about space',
 									start_url: '/index.html',
 									display: 'standalone',
