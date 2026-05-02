@@ -34,6 +34,12 @@ const defaultConfig = {
     { label: 'Privacy', href: 'privacy.html' }
   ],
   // Auth accordion sections; reorder, remove, or add items here for customization
+  actionCards: [
+    { id: 'mission', title: 'Start Mission', desc: 'Pilot your rocket through the asteroid belt.', icon: '🚀', link: '/pages/spacemission.html', type: 'game2d' },
+    { id: 'solar', title: 'Solar Explorer', desc: 'Interact with high-fidelity 3D planetary models.', icon: '🪐', link: '/pages/solarsystem.html', type: 'viewer3d' },
+    { id: 'lab', title: 'Virtual Lab', desc: 'Conduct experiments in zero gravity.', icon: '🧪', link: '/pages/lab.html', type: 'interactive' },
+    { id: 'academy', title: 'Space Academy', desc: 'Earn badges by completing courses.', icon: '🎓', link: '/pages/courses.html', type: 'path' }
+  ],
   authSections: [
     { id: 'google', title: 'Google sign-in', content: '<div class="acc-content"><button id="googleSignInBtn">Sign in with Google</button></div>' },
     { id: 'email', title: 'Email / Password', content: `<div class="acc-content"><form id="emailSignInForm"><input id="email" type="email" placeholder="Email" required /><input id="password" type="password" placeholder="Password" required /><button type="submit">Sign In</button></form></div>` },

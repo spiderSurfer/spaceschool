@@ -17,6 +17,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -48,6 +49,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 /**
  * Sign in with Google using OAuth 2.0 popup flow.
@@ -175,4 +177,4 @@ export async function handleEmailLinkSignIn() {
 }
 
 // Export singleton auth instance for use in other modules
-export { auth };
+export { auth, db };

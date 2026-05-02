@@ -1,3 +1,15 @@
+import { db } from './auth.js';
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  deleteDoc, 
+  doc, 
+  query, 
+  orderBy, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
 const adminCode = 'Admin321';
 
 // --- Helper: Check Admin Status ---
@@ -11,61 +23,6 @@ export function logoutAdmin() {
   location.reload(); // Refresh to clear everything
 }
 
-// ... rest of your functions (renderAdminTools, displayPosts, etc) ...
-function initAdminTools() {
-  const addPostBtn = document.getElementById('lPostAdminBtn');
-  if (addPostBtn) {
-    addPostBtn.addEventListener('click', () => {
-      showAddPostModal();
-    });
-  }
-
-  // Add other button handlers as needed
-  const addContentBtn = document.getElementById('addContentBtn');
-  if (addContentBtn) {
-    addContentBtn.addEventListener('click', () => {
-      alert('Add Content feature coming soon!');
-    });
-  }
-
-  const editContentBtn = document.getElementById('editContentBtn');
-  if (editContentBtn) {
-    editContentBtn.addEventListener('click', () => {
-      alert('Edit Content feature coming soon!');
-    });
-  }
-
-  const deleteContentBtn = document.getElementById('deleteContentBtn');
-  if (deleteContentBtn) {
-    deleteContentBtn.addEventListener('click', () => {
-      alert('Delete Content feature coming soon!');
-    });
-  }
-
-  const manageUsersBtn = document.getElementById('manageUsersBtn');
-  if (manageUsersBtn) {
-    manageUsersBtn.addEventListener('click', () => {
-      alert('Manage Users feature coming soon!');
-    });
-  }
-
-  const viewAnalyticsBtn = document.getElementById('viewAnalyticsBtn');
-  if (viewAnalyticsBtn) {
-    viewAnalyticsBtn.addEventListener('click', () => {
-      alert('View Analytics feature coming soon!');
-    });
-  }
-
-  const siteSettingsBtn = document.getElementById('siteSettingsBtn');
-  if (siteSettingsBtn) {
-    siteSettingsBtn.addEventListener('click', () => {
-      alert('Site Settings feature coming soon!');
-    });
-  }
-}
-
-function showAddPostModal() {
-  // Create modal overlay
 function initAdminTools() {
   const addPostBtn = document.getElementById('lPostAdminBtn');
   if (addPostBtn) {
@@ -137,88 +94,34 @@ function renderAdminTools(container) {
     initAdminTools();
   }, 100);
 }
+function showAddPostModal() {
   const modal = document.createElement('div');
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-  `;
+  modal.className = 'admin-modal-overlay';
 
   modal.innerHTML = `
-    <div style="
-      background: var(--card);
-      padding: 20px;
-      border-radius: var(--radius);
-      max-width: 500px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-    ">
+    <div class="admin-modal-content">
       <h3>Add New Post</h3>
       <form id="addPostForm">
-        <div style="margin-bottom: 15px;">
-          <label for="postTitle" style="display: block; margin-bottom: 5px; color: var(--text);">Title:</label>
-          <input type="text" id="postTitle" required style="
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--muted);
-            border-radius: var(--radius);
-            background: var(--bg);
-            color: var(--text);
-          ">
+        <div class="form-group">
+          <label for="postTitle">Title:</label>
+          <input type="text" id="postTitle" placeholder="Post Title" required>
         </div>
-        <div style="margin-bottom: 15px;">
-          <label for="postCategory" style="display: block; margin-bottom: 5px; color: var(--text);">Category:</label>
-          <select id="postCategory" style="
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--muted);
-            border-radius: var(--radius);
-            background: var(--bg);
-            color: var(--text);
-          ">
+        <div class="form-group">
+          <label for="postCategory">Category:</label>
+          <select id="postCategory">
             <option value="astronomy">Astronomy</option>
             <option value="space">Space Exploration</option>
             <option value="science">Science</option>
             <option value="news">News</option>
           </select>
         </div>
-        <div style="margin-bottom: 15px;">
-          <label for="postContent" style="display: block; margin-bottom: 5px; color: var(--text);">Content:</label>
-          <textarea id="postContent" rows="8" required style="
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--muted);
-            border-radius: var(--radius);
-            background: var(--bg);
-            color: var(--text);
-            resize: vertical;
-          "></textarea>
+        <div class="form-group">
+          <label for="postContent">Content:</label>
+          <textarea id="postContent" rows="6" placeholder="Write something amazing..." required></textarea>
         </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-          <button type="button" id="cancelPost" style="
-            padding: 8px 16px;
-            border: 1px solid var(--muted);
-            border-radius: var(--radius);
-            background: transparent;
-            color: var(--text);
-            cursor: pointer;
-          ">Cancel</button>
-          <button type="submit" style="
-            padding: 8px 16px;
-            border: none;
-            border-radius: var(--radius);
-            background: var(--accent);
-            color: white;
-            cursor: pointer;
-          ">Add Post</button>
+        <div class="form-actions">
+          <button type="button" id="cancelPost" class="btn-ghost">Cancel</button>
+          <button type="submit" class="btn-primary">Add Post</button>
         </div>
       </form>
     </div>
@@ -228,30 +131,39 @@ function renderAdminTools(container) {
 
   // Handle form submission
   const form = modal.querySelector('#addPostForm');
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('postTitle').value;
     const category = document.getElementById('postCategory').value;
     const content = document.getElementById('postContent').value;
 
-    // Here you would typically send this data to a backend
-    // For now, we'll just store it locally and show a success message
-    const post = {
-      id: Date.now(),
-      title,
-      category,
-      content,
-      date: new Date().toISOString(),
-      author: 'Admin'
-    };
+    try {
+      await addDoc(collection(db, "posts"), {
+        title,
+        category,
+        content,
+        createdAt: serverTimestamp(),
+        author: 'Admin'
+      });
 
-    // Store in localStorage for demo purposes
-    const posts = JSON.parse(localStorage.getItem('adminPosts') || '[]');
-    posts.push(post);
-    localStorage.setItem('adminPosts', JSON.stringify(posts));
+      // Save to localStorage too
+      const localPosts = JSON.parse(localStorage.getItem('cachedPosts') || '[]');
+      localPosts.unshift({
+          title,
+          category,
+          content,
+          author: 'Admin',
+          id: 'temp-' + Date.now()
+      });
+      localStorage.setItem('cachedPosts', JSON.stringify(localPosts));
 
-    alert('Post added successfully!');
-    document.body.removeChild(modal);
+      alert('Post added successfully!');
+      document.body.removeChild(modal);
+      displayPosts(); // Refresh the feed
+    } catch (error) {
+      console.error("Error adding post: ", error);
+      alert("Failed to save post to database.");
+    }
   });
 
   // Handle cancel
@@ -268,39 +180,62 @@ function renderAdminTools(container) {
   });
 }
 
-//display posts function 
-export function deletePost(index) {
-    let posts = JSON.parse(localStorage.getItem('adminPosts') || '[]');
-    posts.splice(index, 1); // Remove 1 item at the specific index
-    localStorage.setItem('adminPosts', JSON.stringify(posts));
-    displayPosts(); // Refresh the list
+// Attached to window so the HTML 'onclick' attribute can find it
+window.deletePost = async function(id) {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    try {
+        await deleteDoc(doc(db, "posts", id));
+        
+        // Remove from localStorage
+        let localPosts = JSON.parse(localStorage.getItem('cachedPosts') || '[]');
+        localPosts = localPosts.filter(p => p.id !== id);
+        localStorage.setItem('cachedPosts', JSON.stringify(localPosts));
+
+        displayPosts();
+    } catch (error) {
+        console.error("Error deleting post: ", error);
+    }
 }
 
-export function displayPosts() {
-    // 1. Find the container
-    const container = document.getElementById('posts-container');
-    
-    // 2. SAFETY CHECK: If container is null, just stop here
-    if (!container) {
-        return; 
-    }
-    
-    // 3. Now you can safely set innerHTML
-    const posts = JSON.parse(localStorage.getItem('adminPosts') || '[]');
+function renderPostElements(posts, container) {
     container.innerHTML = '';
-    
-    posts.forEach((post, index) => {
+    posts.forEach((post) => {
         const postElement = document.createElement('div');
         postElement.classList.add('post-card');
-        
         postElement.innerHTML = `
+            <div class="post-category">${post.category || 'General'}</div>
             <h3>${post.title}</h3>
             <p>${post.content}</p>
-            <button onclick="deletePost(${index})" style="background:red; color:white; border:none; padding:5px;">Delete</button>
+            <div class="post-footer">
+                <button class="btn-delete" onclick="deletePost('${post.id}')">Delete</button>
+            </div>
         `;
         container.appendChild(postElement);
     });
 }
+
+export async function displayPosts() {
+    const container = document.getElementById('posts-container');
+    if (!container) return;
+
+    // 1. Load from localStorage for instant display
+    const cached = JSON.parse(localStorage.getItem('cachedPosts') || '[]');
+    if (cached.length > 0) renderPostElements(cached, container);
+    
+    try {
+        // 2. Fetch fresh data from Firebase
+        const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        const freshPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // 3. Update localStorage and Re-render with latest data
+        localStorage.setItem('cachedPosts', JSON.stringify(freshPosts));
+        renderPostElements(freshPosts, container);
+    } catch (error) {
+        console.error("Error fetching posts: ", error);
+    }
+}
+
 export function initAdmin() {
   const adminTools = document.getElementById('admintools');
   const checker = document.getElementById('AdminChecker');
@@ -323,14 +258,3 @@ export function initAdmin() {
     }
   });
 }
-
-  const adminTools = document.getElementById('admintools');
-  let isAdmin = false;
-  const checker = document.getElementById('AdminChecker');
-  checker.addEventListener('input', () => {
-    if (checker.value === adminCode && !isAdmin) {
-      isAdmin = true;
-      alert('Admin access granted!');
-      renderAdminTools(adminTools);
-    }
-  });

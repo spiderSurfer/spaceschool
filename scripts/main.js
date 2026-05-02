@@ -7,6 +7,7 @@
 import './ui.js';
 import './backend.js';
 import './path-utils.js';
+import { SpaceGame2D } from './games-engine.js';
 import { initAdmin, displayPosts, deletePost } from './admin.js';
 import {
 	auth,
@@ -27,6 +28,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const statusEl = document.getElementById('auth-status');
 	const signOutBtn = document.getElementById('signOutBtn');
 	const googleBtn = document.getElementById('googleSignInBtn');
+
+	// Initialize Action Cards Dashboard
+	if (window.UI && typeof window.UI.renderActionCards === 'function') {
+		window.UI.renderActionCards('#dashboard-grid');
+	} else if (document.querySelector('.action-grid-placeholder')) {
+        // Fallback for direct injection
+    }
+
 	const emailForm = document.getElementById('emailSignInForm');
 	const createForm = document.getElementById('createAccountForm');
 	const passwordlessForm = document.getElementById('passwordlessForm');
@@ -138,6 +147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 		console.error('[Main] Admin init error:', e);
 	}
 
+	// Auto-start game engine if canvas exists
+	if (document.getElementById('space-canvas')) {
+		new SpaceGame2D('space-canvas');
+	}
+
 	/**
 	 * Monitor auth state changes.
 	 * Updates UI elements whenever user signs in/out.
@@ -181,20 +195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 		}
 	});
 });
-const checker = document.getElementById('AdminChecker');
 
-checker.addEventListener('keydown', (event) => {
-    // 1. Check if the pressed key is "Enter"
-    if (event.key === 'Enter') {
-        // 2. Run your verification logic
-        if (checker.value === adminCode) {
-            console.log('Access Granted!');
-            // Call your function here
-            renderAdminTools(document.getElementById('admintools'));
-        } else {
-            alert('Incorrect Code!');
-        }
-    }
-});
 window.onload = displayPosts;
 window.addEventListener('DOMContentLoaded', displayPosts);
