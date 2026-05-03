@@ -12,7 +12,7 @@
  * For production, implement cache versioning and stale-while-revalidate patterns.
  */
 
-const CACHE_VERSION = 'v1.0.6';
+const CACHE_VERSION = 'v1.0.7';
 const CACHE_NAME = `space-school-${CACHE_VERSION}`;
 
 /**

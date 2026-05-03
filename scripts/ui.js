@@ -163,10 +163,10 @@ function registerDefaultRoutes() {
   registerRoute('privacy.html', loadPrivacyPolicy);
   registerRoute('privacypolicy.html', loadPrivacyPolicy);
   registerRoute('leaderboard.html', loadLeaderboard);
-  registerRoute('settings.html', loadSettings);
-  registerRoute('./settings.html', loadSettings);
-  registerRoute('studio.html', loadGameStudio);
-  registerRoute('tutorial', startTutorial);
+  registerRoute('settings.html', () => loadSettings());
+  registerRoute('./settings.html', () => loadSettings());
+  registerRoute('studio.html', () => window.loadGameStudio && window.loadGameStudio());
+  registerRoute('tutorial', () => typeof window.startTutorial === 'function' ? window.startTutorial() : console.log('Tutorial coming soon!'));
 }
 
 /**
