@@ -4,26 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Space School — [Page Title]</title>
-    <script>
-      (function() {
-        const path = location.pathname.replace(/\/$/, '');
-        const parts = path.split('/').filter(Boolean);
-        const isFile = parts.length && /\.[^/]+$/.test(parts[parts.length - 1]);
-        const depth = isFile ? parts.length - 1 : parts.length;
-        const base = depth === 0 ? './' : '../'.repeat(depth);
-        const baseEl = document.createElement('base');
-        baseEl.href = base;
-        document.head.prepend(baseEl);
-      })();
-    </script>
-    <link rel="stylesheet" href="assets/style.css" />
+    <link rel="stylesheet" href="/assets/style.css" />
     <link rel="icon" href="assets/logo.png" />
     <!-- <meta name="description" content="Add a short summary here" /> -->
   </head>
   <body>
     <header>
       <div class="site-brand">
-        <a href="index.html"><img src="assets/logo.png" alt="Space School logo" class="logo" /></a>
+        <a href="/index.html"><img src="/assets/logo.png" width="20" height="20" alt="Space School logo" class="logo" /></a>
         <h1>Space School</h1>
       </div>      
       <div id="topbar"></div>    
@@ -87,4 +75,3 @@
     </script>
   </body>
 </html>
-

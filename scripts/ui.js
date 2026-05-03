@@ -21,24 +21,41 @@
  * - window.UI.updateHeaderHeight()
  */
 
+import { resolvePath } from './path-utils.js';
+import { getLeaderboard, auth, getPlayerStats, getUserRank } from './auth.js';
+
+/** @type {Object[]} Full list of possible navigation links for user selection */
+const ALL_AVAILABLE_NAV_LINKS = [
+  { label: 'Home', href: '/index.html', category: 'Core' },
+  { label: 'Games', href: '/pages/games.html', category: 'Games' },
+  { label: 'Solar System', href: '/pages/solarsystem.html', category: 'Modules' },
+  { label: 'Lab', href: '/pages/lab.html', category: 'Modules' },
+  { label: 'FAQ', href: '/pages/faq.html', category: 'Other' },
+  { label: 'Privacy', href: '/pages/privacypolicy.html', category: 'Other' },
+  { label: 'Leaderboard', href: 'leaderboard.html', category: 'Other' },
+  { label: 'Settings', href: 'settings.html', category: 'Core' }
+];
+
 /** @type {Object} Default UI configuration - modify to customize navigation and auth sections */
 const defaultConfig = {
   headerSelector: 'header',
-  topbarSelector: '#topbar',
+  topbarSelector: '.topbar, #topbar',
   navLinks: [
     { label: 'Home', href: '/index.html' },
-    { label: 'Games', href: 'games.html' },
-    { label: 'Solar System', href: 'solarsystem.html' },
-    { label: 'Lab', href: 'lab.html' },
-    { label: 'FAQ', href: 'faq.html' },
-    { label: 'Privacy', href: 'privacy.html' }
+    { label: 'Games', href: '/pages/games.html' },
+    { label: 'Solar System', href: '/pages/solarsystem.html' },
+    { label: 'Lab', href: '/pages/lab.html' },
+    { label: 'Settings', href: 'settings.html' }
   ],
   // Auth accordion sections; reorder, remove, or add items here for customization
   actionCards: [
     { id: 'mission', title: 'Start Mission', desc: 'Pilot your rocket through the asteroid belt.', icon: '🚀', link: '/pages/spacemission.html', type: 'game2d' },
     { id: 'solar', title: 'Solar Explorer', desc: 'Interact with high-fidelity 3D planetary models.', icon: '🪐', link: '/pages/solarsystem.html', type: 'viewer3d' },
     { id: 'lab', title: 'Virtual Lab', desc: 'Conduct experiments in zero gravity.', icon: '🧪', link: '/pages/lab.html', type: 'interactive' },
-    { id: 'academy', title: 'Space Academy', desc: 'Earn badges by completing courses.', icon: '🎓', link: '/pages/courses.html', type: 'path' }
+    { id: 'leaderboard', title: 'Leaderboard', desc: 'See how you rank against other explorers.', icon: '🏆', link: 'leaderboard.html', type: 'social' },
+    { id: 'settings', title: 'Settings', desc: 'Customize your navigation and experience.', icon: '⚙️', link: 'settings.html', type: 'other' },
+    { id: 'academy', title: 'Space Academy', desc: 'Earn badges by completing courses.', icon: '🎓', link: '/pages/courses.html', type: 'path' },
+    { id: 'studio', title: 'Game Studio', desc: 'Create and share your own space missions.', icon: '🛠️', link: 'studio.html', type: 'creative' }
   ],
   authSections: [
     { id: 'google', title: 'Google sign-in', content: '<div class="acc-content"><button id="googleSignInBtn">Sign in with Google</button></div>' },
@@ -75,7 +92,7 @@ let _ui_popoverReposition = null;
  */
 function buildNavHTML(cfg) {
   try {
-    return `<nav class="topbar-links">` + cfg.navLinks.map(l => `<a href="${l.href}" class="topbar-link">${l.label}</a>`).join('') + `</nav>`;
+    return `<nav class="topbar-links">` + cfg.navLinks.map(l => `<a href="${resolvePath(l.href)}" class="topbar-link">${l.label}</a>`).join('') + `</nav>`;
   } catch (error) {
     console.error('[UI] Error building nav HTML:', error);
     return '<nav class="topbar-links"></nav>';
@@ -145,6 +162,11 @@ function registerRoute(path, handler) {
 function registerDefaultRoutes() {
   registerRoute('privacy.html', loadPrivacyPolicy);
   registerRoute('privacypolicy.html', loadPrivacyPolicy);
+  registerRoute('leaderboard.html', loadLeaderboard);
+  registerRoute('settings.html', loadSettings);
+  registerRoute('./settings.html', loadSettings);
+  registerRoute('studio.html', loadGameStudio);
+  registerRoute('tutorial', startTutorial);
 }
 
 /**
@@ -523,6 +545,286 @@ function loadPrivacyPolicy() {
   }
 }
 
+/**
+ * Generates a shareable image of user statistics using Canvas API.
+ * Includes a transparent logo watermark as requested.
+ * @async
+ * @param {Object} stats - User stats from Firestore
+ * @param {number} rank - User global rank
+ * @private
+ */
+async function generateShareImage(stats, rank) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 1200;
+  canvas.height = 630;
+
+  // Render Background
+  ctx.fillStyle = '#071026';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Decorative stars
+  ctx.fillStyle = '#fff';
+  for(let i=0; i<60; i++) {
+    ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 2, 2);
+  }
+
+  // Load and Draw Logo as Transparent Watermark
+  const logo = new Image();
+  logo.crossOrigin = "anonymous";
+  logo.src = resolvePath('/assets/logo.png');
+  await new Promise(res => {
+    logo.onload = res;
+    logo.onerror = res;
+  });
+  
+  if (logo.complete && logo.naturalHeight !== 0) {
+    ctx.save();
+    ctx.globalAlpha = 0.12; 
+    ctx.drawImage(logo, canvas.width - 450, canvas.height - 450, 400, 400);
+    ctx.restore();
+  }
+
+  // Draw Header
+  ctx.fillStyle = '#6dd3ff';
+  ctx.font = 'bold 50px Inter, sans-serif';
+  ctx.fillText('SPACE SCHOOL ACADEMY', 60, 100);
+  
+  ctx.fillStyle = '#fff';
+  ctx.font = '30px Inter, sans-serif';
+  ctx.fillText('MISSION STATISTICS', 60, 150);
+
+  // Draw Stats Grid
+  const drawStat = (label, value, x, y) => {
+    ctx.fillStyle = '#9fb3d2';
+    ctx.font = '24px Inter, sans-serif';
+    ctx.fillText(label, x, y);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 60px Inter, sans-serif';
+    ctx.fillText(value, x, y + 70);
+  };
+
+  drawStat('GLOBAL RANK', `#${rank || '??'}`, 60, 280);
+  drawStat('HIGH SCORE', (stats.highScore || 0).toLocaleString(), 500, 280);
+  drawStat('COSMIC COINS', `🪙 ${stats.coins || 0}`, 60, 450);
+  drawStat('PLANETS VISITED', `🪐 ${stats.planetsDiscovered || 0}`, 500, 450);
+
+  // Footer
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '20px Inter, sans-serif';
+  ctx.fillText('Join the mission: spaceschooleg.web.app', 60, canvas.height - 50);
+
+  // Share or Download
+  const dataUrl = canvas.toDataURL('image/png');
+  if (navigator.share) {
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], 'my-space-stats.png', { type: 'image/png' });
+      await navigator.share({
+        title: 'My Space School Journey',
+        text: `I'm ranked #${rank} at Space Academy! Check out my stats!`,
+        files: [file]
+      });
+    } catch (e) {
+      const link = document.createElement('a');
+      link.download = 'space-stats.png';
+      link.href = dataUrl;
+      link.click();
+    }
+  } else {
+    const link = document.createElement('a');
+    link.download = 'space-stats.png';
+    link.href = dataUrl;
+    link.click();
+  }
+}
+
+/**
+ * Modern Toast Notification System
+ * Replaces alerts with cards at the bottom right.
+ */
+function showToast(message, type = 'info') {
+  let container = qs('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast-card toast-${type}`;
+  const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${message}</span>`;
+  
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+/**
+ * Settings page loader.
+ * Allows users to choose which links to display in the topbar.
+ */
+function loadSettings() {
+  try {
+    const mainEl = qs('main');
+    if (!mainEl) return;
+
+    const savedLinkLabels = JSON.parse(localStorage.getItem('topbar_links') || 'null') || 
+      defaultConfig.navLinks.map(l => l.label);
+
+    // Group links by category
+    const categories = [...new Set(ALL_AVAILABLE_NAV_LINKS.map(l => l.category))];
+
+    mainEl.innerHTML = `
+      <article class="settings-page card content-block">
+        <h1>⚙️ Topbar Settings</h1>
+        <p>Choose which modules and games you want visible in your navigation bar.</p>
+        <form id="topbarSettingsForm" style="display: flex; flex-direction: column; gap: 20px;">
+          ${categories.map(cat => `
+            <fieldset style="border: 1px solid var(--glass); border-radius: 8px; padding: 15px;">
+              <legend style="padding: 0 10px; color: var(--accent); font-weight: bold;">${cat}</legend>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                ${ALL_AVAILABLE_NAV_LINKS.filter(l => l.category === cat).map(link => `
+                  <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background 0.2s;">
+                    <input type="checkbox" name="navLink" value="${link.label}" ${savedLinkLabels.includes(link.label) ? 'checked' : ''}>
+                    ${link.label}
+                  </label>
+                `).join('')}
+              </div>
+            </fieldset>
+          `).join('')}
+          <button type="submit" class="btn-primary">Apply & Save Configuration</button>
+          <button type="button" id="resetSettings" class="btn-ghost">Reset to Default</button>
+        </form>
+      </article>`;
+
+    const form = qs('#topbarSettingsForm');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const selectedLabels = Array.from(new FormData(form).getAll('navLink'));
+      localStorage.setItem('topbar_links', JSON.stringify(selectedLabels));
+      
+      // Update live config and re-render
+      defaultConfig.navLinks = ALL_AVAILABLE_NAV_LINKS.filter(l => selectedLabels.includes(l.label));
+      renderTopbar(defaultConfig);
+      alert('Navigation settings saved!');
+    });
+  } catch (error) {
+    console.error('[UI] Error loading settings:', error);
+  }
+}
+
+/**
+ * Leaderboard page loader.
+ * Fetches and displays top 5 high scores.
+ * @async
+ * @private
+ */
+async function loadLeaderboard() {
+  try {
+    const mainEl = qs('main');
+    if (!mainEl) return;
+
+    // Show loading state
+    mainEl.innerHTML = `<section class="content-block"><h2>🏆 Hall of Fame</h2><p>Loading the best explorers...</p></section>`;
+
+    const topScores = await getLeaderboard();
+    
+    // Fetch personal stats for the "My Progress" section if logged in
+    let myProgressHTML = '';
+    const user = auth.currentUser;
+    if (user) {
+      const [stats, rank] = await Promise.all([getPlayerStats(), getUserRank(user.uid)]);
+      
+      if (stats) {
+        myProgressHTML = `
+          <div class="my-progress-card" style="background: var(--glass); border: 1px solid var(--accent); border-radius: var(--radius); padding: 20px; margin-bottom: 25px;">
+            <h3 style="margin-top:0; color: var(--accent);">👨‍🚀 Your Personal Progress</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+              <div class="stat-item">
+                <span style="display:block; font-size: 0.8rem; color: var(--muted);">Global Rank</span>
+                <span style="font-size: 1.4rem; font-weight: bold;">#${rank || '??'}</span>
+              </div>
+              <div class="stat-item">
+                <span style="display:block; font-size: 0.8rem; color: var(--muted);">High Score</span>
+                <span style="font-size: 1.4rem; font-weight: bold;">${(stats.highScore || 0).toLocaleString()}</span>
+              </div>
+              <div class="stat-item">
+                <span style="display:block; font-size: 0.8rem; color: var(--muted);">Cosmic Coins</span>
+                <span style="font-size: 1.4rem; font-weight: bold;">🪙 ${stats.coins || 0}</span>
+              </div>
+              <div class="stat-item">
+                <span style="display:block; font-size: 0.8rem; color: var(--muted);">Planets Unlocked</span>
+                <span style="font-size: 1.4rem; font-weight: bold;">🪐 ${stats.planetsDiscovered || 0}</span>
+              </div>
+            </div>
+            <button id="shareStatsBtn" class="btn-primary" style="margin-top: 15px; width: 100%; background: var(--accent-2); color: var(--bg); font-weight: bold;">📤 Share My Journey</button>
+          </div>`;
+      }
+    }
+
+    let leaderboardHTML = `
+      <article class="leaderboard card content-block">
+        <h1>🏆 Galactic Leaderboard</h1>
+        ${myProgressHTML}
+        <p>Top 5 Highest Scoring Missions</p>
+        <div class="leaderboard-table-wrap" style="overflow-x: auto;">
+          <table style="width:100%; border-collapse: collapse; margin: 20px 0;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--accent);">
+                <th style="text-align:left; padding: 12px;">Rank</th>
+                <th style="text-align:left; padding: 12px;">Explorer ID</th>
+                <th style="text-align:right; padding: 12px;">High Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topScores.length > 0 ? topScores.map((entry, index) => `
+                <tr style="border-bottom: 1px solid var(--glass);">
+                  <td style="padding: 12px;">${index + 1}</td>
+                  <td style="padding: 12px; font-family: monospace; color: var(--accent);">${(entry.userId || 'unknown').substring(0, 8)}...</td>
+                  <td style="padding: 12px; text-align:right; font-weight: bold;">${(entry.highScore || 0).toLocaleString()}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="3" style="text-align:center; padding: 20px;">No missions recorded yet.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+        <button id="backToDashboard" class="btn-primary" style="width:100%">Back to Dashboard</button>
+      </article>`;
+
+    mainEl.innerHTML = leaderboardHTML;
+
+    // Wire Share Button
+    const shareBtn = qs('#shareStatsBtn');
+    if (shareBtn && user) {
+      shareBtn.addEventListener('click', async () => {
+        try {
+          const originalText = shareBtn.textContent;
+          shareBtn.textContent = 'Generating Image...';
+          shareBtn.disabled = true;
+          const [stats, rank] = await Promise.all([getPlayerStats(), getUserRank(user.uid)]);
+          await generateShareImage(stats, rank);
+          shareBtn.textContent = originalText;
+        } catch (err) {
+          console.error('[UI] Share failed:', err);
+        } finally {
+          shareBtn.disabled = false;
+        }
+      });
+    }
+
+    const back = qs('#backToDashboard');
+    if (back) {
+      back.addEventListener('click', () => location.reload());
+    }
+  } catch (error) {
+    console.error('[UI] Error loading leaderboard:', error);
+  }
+}
+
 // --- Theme Toggle Functionality -----------------------------------------
 function initThemeToggle() {
   const toggle = qs('#themeToggle');
@@ -549,16 +851,77 @@ function setTheme(theme) {
   }
 }
 
+/**
+ * Render action cards into a container
+ * @param {string} containerSelector 
+ */
+function renderActionCards(containerSelector = '#dashboard-grid') {
+  const container = qs(containerSelector);
+  if (!container) return;
+  
+  container.innerHTML = `<div class="action-grid">` + defaultConfig.actionCards.map(card => `
+    <div class="action-card" onclick="window.UI.navigateTo('${card.link}')">
+      <div style="font-size: 3rem;">${card.icon}</div>
+      <h3>${card.title}</h3>
+      <p>${card.desc}</p>
+      <div class="btn-primary" style="margin-top:auto; text-align:center; padding: 10px; border-radius: 8px; background: var(--accent); color: var(--bg); font-weight: bold;">Launch</div>
+    </div>
+  `).join('') + `</div>`;
+}
+
+/**
+ * Render 6 possible widgets, limited to 3 on screen
+ */
+function renderDashboardWidgets(data) {
+  const container = qs('#dashboard-grid');
+  if (!container) return;
+
+  const allWidgets = [
+    { label: 'Created Missions', val: data.createdCount, icon: '🛠️' },
+    { label: 'Global Rank', val: `#${data.rank || '??'}`, icon: '🏆' },
+    { label: 'Cosmic Coins', val: `🪙 ${data.stats?.coins || 0}`, icon: '💰' },
+    { label: 'Average Score', val: `${data.avgScore}%`, icon: '📈' },
+    { label: 'Reading Level', val: `Lv. ${data.readingLevel}`, icon: '📖' },
+    { label: 'Accuracy', val: data.stats?.totalQuestionsAnswered ? Math.round((data.stats.correctAnswers / data.stats.totalQuestionsAnswered) * 100) + '%' : '0%', icon: '🎯' }
+  ];
+
+  // Limit to 3 widgets for the clean "Home Screen" look requested
+  const displayWidgets = allWidgets.slice(0, 3);
+
+  container.innerHTML = `
+    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+      ${displayWidgets.map(w => `
+        <div class="stat-card" style="background: var(--glass); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">${w.icon}</div>
+          <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase;">${w.label}</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">${w.val}</div>
+        </div>
+      `).join('')}
+    </div>
+    <hr style="border: 0; border-top: 1px solid var(--glass); margin-bottom: 30px;">
+  `;
+  
+  // Also render the standard action cards below the stats
+  renderActionCards('#dashboard-grid-actions');
+}
+
 // --- Initialization & public API -----------------------------------------
 function initUI(cfg = {}) {
+  // Load personalized navigation if exists
+  const savedLinkLabels = JSON.parse(localStorage.getItem('topbar_links') || 'null');
+  if (savedLinkLabels) {
+    defaultConfig.navLinks = ALL_AVAILABLE_NAV_LINKS.filter(l => savedLinkLabels.includes(l.label));
+  }
+
   const config = Object.assign({}, defaultConfig, cfg);
+  
   renderTopbar(config);
   initThemeToggle();
   registerDefaultRoutes();
   return {
     openAuthPopover, closeAuthPopover, toggleAuthPopover,
-    expandSection, collapseSection,
-    registerRoute, navigateTo, updateHeaderHeight
+    expandSection, collapseSection, renderActionCards, showToast,
+    registerRoute, navigateTo, updateHeaderHeight, renderDashboardWidgets
   };
 }
 
@@ -566,4 +929,4 @@ function initUI(cfg = {}) {
 window.UI = initUI();
 
 // Module exports for other modules
-export { initUI, registerRoute, navigateTo, openAuthPopover, closeAuthPopover, expandSection, collapseSection };
+export { initUI, registerRoute, navigateTo, openAuthPopover, closeAuthPopover, expandSection, collapseSection, renderActionCards };

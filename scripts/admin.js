@@ -1,4 +1,4 @@
-import { db } from './auth.js';
+import { db, getAnalyticsData } from './auth.js';
 import { 
   collection, 
   addDoc, 
@@ -35,42 +35,42 @@ function initAdminTools() {
   const addContentBtn = document.getElementById('addContentBtn');
   if (addContentBtn) {
     addContentBtn.addEventListener('click', () => {
-      alert('Add Content feature coming soon!');
+      if (window.UI) window.UI.showToast('Add Content feature coming soon!', 'info');
     });
   }
 
   const editContentBtn = document.getElementById('editContentBtn');
   if (editContentBtn) {
     editContentBtn.addEventListener('click', () => {
-      alert('Edit Content feature coming soon!');
+      if (window.UI) window.UI.showToast('Edit Content feature coming soon!', 'info');
     });
   }
 
   const deleteContentBtn = document.getElementById('deleteContentBtn');
   if (deleteContentBtn) {
     deleteContentBtn.addEventListener('click', () => {
-      alert('Delete Content feature coming soon!');
+      if (window.UI) window.UI.showToast('Delete Content feature coming soon!', 'info');
     });
   }
 
   const manageUsersBtn = document.getElementById('manageUsersBtn');
   if (manageUsersBtn) {
     manageUsersBtn.addEventListener('click', () => {
-      alert('Manage Users feature coming soon!');
+      if (window.UI) window.UI.showToast('Manage Users feature coming soon!', 'info');
     });
   }
 
   const viewAnalyticsBtn = document.getElementById('viewAnalyticsBtn');
   if (viewAnalyticsBtn) {
     viewAnalyticsBtn.addEventListener('click', () => {
-      alert('View Analytics feature coming soon!');
+      if (window.UI) window.UI.showToast('View Analytics feature coming soon!', 'info');
     });
   }
 
   const siteSettingsBtn = document.getElementById('siteSettingsBtn');
   if (siteSettingsBtn) {
     siteSettingsBtn.addEventListener('click', () => {
-      alert('Site Settings feature coming soon!');
+      if (window.UI) window.UI.showToast('Site Settings feature coming soon!', 'info');
     });
   }
 }

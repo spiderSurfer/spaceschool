@@ -27,8 +27,26 @@ import {
   signOut,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
-  signInWithEmailLink
+  signInWithEmailLink,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  increment, 
+  serverTimestamp, 
+  collection, 
+  query, 
+  orderBy, 
+  limit, 
+  getDocs,
+  where,
+  getCountFromServer,
+  runTransaction,
+  collectionGroup
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 /**
  * Firebase configuration object.
@@ -125,8 +143,6 @@ export async function signOutUser() {
  * @returns {Promise<void>}
  * @throws {Error} If email sending fails
  */
-// In auth.js - Update this function
-// In auth.js - Update this path
 export async function sendPasswordlessSignInLink(email) {
   const actionCodeSettings = {
     // Point directly to the folder where the file lives
@@ -176,5 +192,239 @@ export async function handleEmailLinkSignIn() {
   }
 }
 
+/**
+ * Sync game statistics to Firestore based on user schema.
+ * @param {Object} stats - The stats to update (coins, correctAnswers, etc.)
+ */
+export async function updateGameStats(stats) {
+  if (!auth.currentUser) return;
+  const uid = auth.currentUser.uid;
+  const statsRef = doc(db, "GameStats", uid);
+
+  try {
+    const snap = await getDoc(statsRef);
+    if (!snap.exists()) {
+      await setDoc(statsRef, {
+        userId: uid,
+        coins: stats.coins || 0,
+        totalQuestionsAnswered: stats.questions || 0,
+        correctAnswers: stats.correct || 0,
+        planetsDiscovered: stats.planets || 0,
+        constellationsUnlocked: 0,
+        highScore: stats.score || 0
+      });
+    } else {
+      await updateDoc(statsRef, {
+        coins: increment(stats.coins || 0),
+        totalQuestionsAnswered: increment(stats.questions || 0),
+        correctAnswers: increment(stats.correct || 0),
+        highScore: Math.max(snap.data().highScore || 0, stats.score || 0)
+      });
+    }
+  } catch (error) {
+    console.error("[Auth] Error updating game stats:", error);
+  }
+}
+
+/**
+ * Get current user stats
+ */
+export async function getPlayerStats() {
+  if (!auth.currentUser) return null;
+  const snap = await getDoc(doc(db, "GameStats", auth.currentUser.uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+/**
+ * Fetch top 5 high scores from GameStats collection.
+ * @async
+ * @returns {Promise<Array>} Array of top player stats
+ */
+export async function getLeaderboard() {
+  try {
+    const q = query(collection(db, "GameStats"), orderBy("highScore", "desc"), limit(5));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
+  } catch (error) {
+    console.error("[Auth] Error fetching leaderboard:", error);
+    return [];
+  }
+}
+
+/**
+ * Calculate the global rank of a specific user based on their high score.
+ * @async
+ * @param {string} uid - User ID
+ * @returns {Promise<number|null>} The rank number or null if stats don't exist
+ */
+export async function getUserRank(uid) {
+  try {
+    const stats = await getPlayerStats();
+    if (!stats || stats.highScore === undefined) return null;
+    
+    const score = stats.highScore;
+    const q = query(collection(db, "GameStats"), where("highScore", ">", score));
+    const snap = await getCountFromServer(q);
+    
+    // Rank is (number of people with higher score) + 1
+    return snap.data().count + 1;
+  } catch (error) {
+    console.error("[Auth] Error fetching rank:", error);
+    return null;
+  }
+}
+
+/**
+ * Fetch counts and averages for Dashboard Widgets
+ */
+export async function getDashboardData(uid) {
+  try {
+    const stats = await getPlayerStats();
+    const rank = await getUserRank(uid);
+    
+    // Count created missions
+    const missionsQ = query(collection(db, "UserGames"), where("creatorId", "==", uid));
+    const missionsSnap = await getCountFromServer(missionsQ);
+    
+    // Calculate Reading Progress & Avg Score
+    const progressQ = query(collection(db, "UserModuleProgress"), where("userId", "==", uid));
+    const progressSnap = await getDocs(progressQ);
+    
+    let totalScore = 0;
+    let completedCount = 0;
+    progressSnap.forEach(doc => {
+      totalScore += doc.data().score || 0;
+      if (doc.data().completed) completedCount++;
+    });
+
+    return {
+      stats,
+      rank,
+      createdCount: missionsSnap.data().count,
+      avgScore: progressSnap.size > 0 ? Math.round(totalScore / progressSnap.size) : 0,
+      readingLevel: completedCount
+    };
+  } catch (e) {
+    console.error("[Auth] Dashboard data fetch failed:", e);
+    return null;
+  }
+}
+
+/**
+ * Game Studio: Save custom mission to Firestore
+ */
+export async function saveUserGame(missionData) {
+    if (!auth.currentUser) return;
+    try {
+        const docRef = doc(collection(db, "UserGames"));
+        await setDoc(docRef, {
+            ...missionData,
+            creatorId: auth.currentUser.uid,
+            creatorName: auth.currentUser.displayName || 'Anonymous Explorer',
+            createdAt: serverTimestamp()
+        });
+        
+        // Reward for creative contribution
+        await updateGameStats({ coins: 50 });
+        
+        return true;
+    } catch (e) {
+        console.error("[Studio] Save failed:", e);
+        return false;
+    }
+}
+
+export async function getCommunityGames() {
+    const q = query(collection(db, "UserGames"), orderBy("createdAt", "desc"), limit(10));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({id: d.id, ...d.data()}));
+}
+
+/**
+ * Save user progress for a learning module.
+ * @param {string} moduleId - ID of the module (e.g., 'astronomy_1')
+ * @param {number} score - Quiz score (0-100)
+ */
+export async function saveModuleProgress(moduleId, score) {
+    if (!auth.currentUser) return;
+    const uid = auth.currentUser.uid;
+    const progressId = `${uid}_${moduleId}`;
+    const progressRef = doc(db, "UserModuleProgress", progressId);
+
+    try {
+        const snap = await getDoc(progressRef);
+        const isCompleted = score >= 70; 
+        
+        const data = {
+            learningModuleId: moduleId,
+            userId: uid,
+            score: score,
+            lastAttemptedAt: serverTimestamp()
+        };
+
+        if (isCompleted) {
+            data.completed = true;
+            data.completionDate = serverTimestamp();
+        }
+
+        if (!snap.exists()) {
+            data.bestScore = score;
+            await setDoc(progressRef, data);
+        } else {
+            const currentBest = snap.data().bestScore || 0;
+            data.bestScore = Math.max(currentBest, score);
+            await updateDoc(progressRef, data);
+        }
+        
+        // Reward for performance and sync to global statistics
+        const reward = score >= 90 ? 25 : (score >= 70 ? 10 : 0);
+        await updateGameStats({ 
+            coins: reward,
+            correct: isCompleted ? 1 : 0,
+            questions: 1 
+        });
+
+    } catch (error) {
+        console.error("[Auth] Error saving module progress:", error);
+    }
+}
+
+/**
+ * Log a page view or event for internal analytics.
+ * @param {string} eventName - The event to track (e.g., 'page_view_home')
+ */
+export async function trackEvent(eventName) {
+    const eventRef = doc(db, "SystemAnalytics", eventName);
+    try {
+        await runTransaction(db, async (transaction) => {
+            const snap = await transaction.get(eventRef);
+            if (!snap.exists()) {
+                transaction.set(eventRef, { count: 1, lastOccurred: serverTimestamp() });
+            } else {
+                transaction.update(eventRef, { 
+                    count: increment(1), 
+                    lastOccurred: serverTimestamp() 
+                });
+            }
+        });
+    } catch (e) {
+        console.error("[Analytics] Tracking failed:", e);
+    }
+}
+
+/**
+ * Fetch all analytics data for the Admin Dashboard.
+ */
+export async function getAnalyticsData() {
+    try {
+        const q = query(collection(db, "SystemAnalytics"));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+        console.error("[Analytics] Fetch failed:", e);
+        return [];
+    }
+}
+
 // Export singleton auth instance for use in other modules
-export { auth, db };
+export { auth, db, onAuthStateChanged };

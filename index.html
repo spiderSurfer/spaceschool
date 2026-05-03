@@ -15,8 +15,7 @@
     </head>
     <body>
         <header>
-            <h1>Space School</h1>
-            <div id="topbar"></div>
+            <div class="topbar"></div>
         </header>
 
         <main class="container">
@@ -25,9 +24,15 @@
                 <p>We Provide Interactive Learning Experiences About Space</p>
                 <p></p>
                 <p>Discover the Wonders of Space with Us</p>
-                <p><a href="pages/courses.html">Explore Our Courses</a></p>
-                <p><a href="pages/faq.html">Learn More About Us With Frequently Asked Questions</a></p>
-                <div id="admintools"></div>
+                
+                <div id="user-dashboard" style="display: none; margin-top: 30px;">
+                    <h2 id="welcome-msg">Welcome Explorer!</h2>
+                    <div id="dashboard-grid"></div>
+                </div>
+                <div id="dashboard-grid-actions"></div>
+                <hr style="border: 1px solid var(--glass); margin: 40px 0;">
+                <div id="admintools" style="margin-top: 40px;"></div>
+                <hr style="border: 1px solid var(--glass); margin: 40px 0;">
                 <input name="Code" id="AdminChecker" style="border: 4px solid greenyellow" placeholder="Enter Code" />
             </section>
         </main>
@@ -86,4 +91,3 @@
         </script>
     </body>
 </html>
-

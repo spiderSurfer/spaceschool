@@ -12,7 +12,7 @@
  * For production, implement cache versioning and stale-while-revalidate patterns.
  */
 
-const CACHE_VERSION = 'v1.0.3';
+const CACHE_VERSION = 'v1.0.6';
 const CACHE_NAME = `space-school-${CACHE_VERSION}`;
 
 /**
@@ -28,7 +28,7 @@ const ASSETS_TO_CACHE = [
 	'/assets/style.css',
 	'/assets/logo1-192.jpeg',
 	'/assets/logo1-512.jpeg',
-	'/logo.png',
+	'/assets/logo.png',
 	'/assets/logo1.jpeg',
 	'/pages/offline.html',
 	'/scripts/auth.js',
@@ -74,6 +74,7 @@ const ASSETS_TO_CACHE = [
 	'/pages/Courses/test/missions.html',
 	'/pages/Courses/test/moon.html',
 	'/pages/Courses/test/creationtool.html',
+	'/pages/Courses/test/techdev.html',
 	'https://sketchfab.com/models/74cbeaeae2174a218fe9455d77902b5c/embed?autospin=1&autostart=1',
 	'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
 	'https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js',
@@ -103,15 +104,6 @@ self.addEventListener('install', (event) => {
 			} catch (err) {
 				console.warn('[SW] Failed to cache during install:', asset, err);
 			}
-		}
-		// Ensure manifest is cached if available
-		try {
-			const m = await fetch('/manifest.json');
-			if (m && m.ok) {
-				await cache.put('/manifest.json', m.clone());
-			}
-		} catch (e) {
-			console.warn('[SW] Manifest cache failed:', e);
 		}
 		await self.skipWaiting();
 	})());
@@ -147,14 +139,41 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
+	// For CSS and JS files: STALE-WHILE-REVALIDATE strategy
+	// Serves cached version immediately while fetching the latest in the background
+	if (url.origin === location.origin && (url.pathname.endsWith('.css') || url.pathname.endsWith('.js') || url.pathname.startsWith('/scripts/'))) {
+		event.respondWith(
+			caches.open(CACHE_NAME).then((cache) => {
+				return cache.match(request).then((cachedResponse) => {
+					const fetchPromise = fetch(request)
+						.then((networkResponse) => {
+							if (networkResponse && networkResponse.ok) {
+								cache.put(request, networkResponse.clone());
+							}
+							return networkResponse;
+						})
+						.catch(() => {
+							// Silent failure for background revalidation
+						});
+					if (cachedResponse) {
+						console.log('[SW] Serving stale asset from cache:', url.pathname);
+						return cachedResponse;
+					}
+					return fetchPromise;
+				});
+			})
+		);
+		return;
+	}
+
 	// For manifest, logo, assets, scripts, and page resources: CACHE-FIRST strategy
 	if (
 		url.pathname === '/manifest.json' ||
-		url.pathname === '/logo.png' ||
+		url.pathname === '/assets/logo.png' ||
 		url.pathname.startsWith('/assets/') ||
 		url.pathname.startsWith('/scripts/') ||
 		url.pathname.startsWith('/pages/') ||
-		url.pathname.startWith('/Courses/')
+		url.pathname.startsWith('/Courses/')
 	) {
 		event.respondWith(
 			caches.match(request)
@@ -177,7 +196,7 @@ self.addEventListener('fetch', (event) => {
 							if (request.headers.get('accept')?.includes('text/html')) {
 								return caches.match('/pages/offline.html');
 							}
-							if (url.pathname === '/logo.png') {
+							if (url.pathname === '/assets/logo.png') {
 								return new Response(
 									`<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" fill="#071026"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#71c0fc" font-size="24">Space</text></svg>`,
 									{
@@ -199,9 +218,9 @@ self.addEventListener('fetch', (event) => {
 									orientation: 'portrait-primary',
 									scope: '/',
 									icons: [
-										{ src: 'assets/logo1-192.jpeg', sizes: '192x192', type: 'image/jpeg', purpose: 'any' },
-										{ src: 'assets/logo1-512.jpeg', sizes: '512x512', type: 'image/jpeg', purpose: 'any' },
-										{ src: 'assets/logo1-512.jpeg', sizes: '512x512', type: 'image/jpeg', purpose: 'any maskable' }
+										{ src: '/assets/logo1-192.jpeg', sizes: '192x192', type: 'image/jpeg', purpose: 'any' },
+										{ src: '/assets/logo1-512.jpeg', sizes: '512x512', type: 'image/jpeg', purpose: 'any' },
+										{ src: '/assets/logo1-512.jpeg', sizes: '512x512', type: 'image/jpeg', purpose: 'any maskable' }
 									]
 								}), {
 									status: 200,

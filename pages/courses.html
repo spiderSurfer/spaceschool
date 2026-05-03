@@ -3,21 +3,34 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Space School � PLACEHOLDER</title>
+    <title>Space School � PLACEHOLDER</title>
     <link rel="stylesheet" href="../assets/style.css" />
     <link rel="icon" href="../assets/logo.png" />
   </head>
   <body>
     <header>
-      <h1>Space School</h1>
-      <div id="topbar"></div>
+      <div class="topbar"></div>
     </header>
     <main class="container">
-      <h2>PLACEHOLDER</h2>
-      <p class="placeholder">Placeholder: Add content for this page.</p>
+      <section class="content-block">
+        <h2>Space Academy Curriculum</h2>
+        <p>Master the secrets of the cosmos through our structured learning paths. Complete quizzes to earn badges and Cosmic Coins.</p>
+        
+        <div class="action-grid">
+          <div class="action-card" onclick="location.href='/pages/Courses/astronomy/astronomy.html'">
+            <div style="font-size: 2rem;">🔭</div>
+            <h3>Fundamental Astronomy</h3>
+            <p>Learn about stars, galaxies, and the tools we use to see them.</p>
+          </div>
+          <div class="action-card" onclick="location.href='/pages/Courses/technologydev/techdev.html'">
+            <div style="font-size: 2rem;">🛰️</div>
+            <h3>Space Technology</h3>
+            <p>Explore the engineering behind rockets and satellites.</p>
+          </div>
+        </div>
+      </section>
     </main>
     <footer><p>&copy; Space School</p></footer>
     <script type="module" src="/scripts/main.js"></script>
   </body>
 </html>
-
