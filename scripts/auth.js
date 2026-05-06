@@ -1,6 +1,6 @@
 /**
- * @fileoverview Firebase Authentication Module
- * Provides OAuth and passwordless sign-in flows for the Space School application.
+ * @fileoverview Firebase Authentication Module for Solar School
+ * Provides OAuth and passwordless sign-in flows with advanced persistence.
  * 
  * SECURITY: Firebase config must be externalized for production.
  * Set these environment variables:
@@ -31,7 +31,8 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { 
-  doc, 
+  doc,
+  enableIndexedDbPersistence,
   getDoc, 
   setDoc, 
   updateDoc, 
@@ -68,6 +69,19 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Enable offline persistence for PWA support
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+      // Multiple tabs open, persistence can only be enabled in one tab at a time.
+      console.warn('[Firestore] Persistence failed: Multiple tabs open');
+    } else if (err.code == 'unimplemented') {
+      // The current browser does not support all of the features required to enable persistence
+      console.warn('[Firestore] Persistence unimplemented');
+    }
+  });
+}
 
 /**
  * Sign in with Google using OAuth 2.0 popup flow.
@@ -157,22 +171,17 @@ export async function sendPasswordlessSignInLink(email) {
 /**
  * Complete passwordless sign-in if the current URL contains a sign-in link.
  * Call this on page load to handle email link authentication.
- * @async
+ * @async 
+ * @param {string} [manualEmail] - Email provided via UI input to avoid prompts
  * @returns {Promise<UserCredential|null>} User credential if valid, null otherwise
- * @throws {Error} If email is required but not provided
  */
-export async function handleEmailLinkSignIn() {
+export async function handleEmailLinkSignIn(manualEmail = null) {
   try {
     if (isSignInWithEmailLink(auth, window.location.href)) {
-      let email = window.localStorage.getItem('emailForSignIn');
-      
-      // Fallback: prompt user if email not in localStorage (cross-device scenario)
-      if (!email) {
-        email = window.prompt('Please provide your email for confirmation:');
-      }
+      let email = manualEmail || window.localStorage.getItem('emailForSignIn');
       
       if (!email) {
-        throw new Error('Email is required to complete sign-in with link.');
+        return { needsEmail: true };
       }
       
       const result = await signInWithEmailLink(auth, email, window.location.href);
@@ -202,25 +211,28 @@ export async function updateGameStats(stats) {
   const statsRef = doc(db, "GameStats", uid);
 
   try {
-    const snap = await getDoc(statsRef);
-    if (!snap.exists()) {
-      await setDoc(statsRef, {
-        userId: uid,
-        coins: stats.coins || 0,
-        totalQuestionsAnswered: stats.questions || 0,
-        correctAnswers: stats.correct || 0,
-        planetsDiscovered: stats.planets || 0,
-        constellationsUnlocked: 0,
-        highScore: stats.score || 0
-      });
-    } else {
-      await updateDoc(statsRef, {
-        coins: increment(stats.coins || 0),
-        totalQuestionsAnswered: increment(stats.questions || 0),
-        correctAnswers: increment(stats.correct || 0),
-        highScore: Math.max(snap.data().highScore || 0, stats.score || 0)
-      });
+    // Using setDoc with { merge: true } is more robust for offline scenarios
+    // as it combines the creation and update logic into a single operation
+    // that Firestore can easily queue.
+    
+    const currentStats = await getDoc(statsRef).catch(() => null);
+    const currentHighScore = currentStats?.exists() ? (currentStats.data().highScore || 0) : 0;
+
+    const dataToUpdate = {
+      userId: uid,
+      coins: increment(stats.coins || 0),
+      totalQuestionsAnswered: increment(stats.questions || 0),
+      correctAnswers: increment(stats.correct || 0),
+      highScore: Math.max(currentHighScore, stats.score || 0)
+    };
+
+    // If document doesn't exist, provide initial values for new fields
+    if (!currentStats?.exists()) {
+      dataToUpdate.planetsDiscovered = stats.planets || 0;
+      dataToUpdate.constellationsUnlocked = 0;
     }
+
+    await setDoc(statsRef, dataToUpdate, { merge: true });
   } catch (error) {
     console.error("[Auth] Error updating game stats:", error);
   }
@@ -231,8 +243,13 @@ export async function updateGameStats(stats) {
  */
 export async function getPlayerStats() {
   if (!auth.currentUser) return null;
-  const snap = await getDoc(doc(db, "GameStats", auth.currentUser.uid));
-  return snap.exists() ? snap.data() : null;
+  try {
+    const snap = await getDoc(doc(db, "GameStats", auth.currentUser.uid));
+    return snap.exists() ? snap.data() : null;
+  } catch (e) {
+    console.warn("[Auth] Using cached stats (offline)");
+    return null; // Logic in main.js will handle null by showing cached or default UI
+  }
 }
 
 /**
@@ -264,8 +281,12 @@ export async function getUserRank(uid) {
     
     const score = stats.highScore;
     const q = query(collection(db, "GameStats"), where("highScore", ">", score));
-    const snap = await getCountFromServer(q);
     
+    // getCountFromServer requires an active connection. 
+    // We wrap it to prevent crashes when offline.
+    if (!navigator.onLine) return null;
+    
+    const snap = await getCountFromServer(q);
     // Rank is (number of people with higher score) + 1
     return snap.data().count + 1;
   } catch (error) {
@@ -311,7 +332,7 @@ export async function getDashboardData(uid) {
 }
 
 /**
- * Game Studio: Save custom mission to Firestore
+ * Solar Studio: Save custom mission to Firestore
  */
 export async function saveUserGame(missionData) {
     if (!auth.currentUser) return;

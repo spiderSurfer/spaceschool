@@ -3,21 +3,53 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Space School | Astronuts Names, Missions, Statuses, And Discoveries</title>
+    <title>Solar School | Astronauts of the System</title>
     <link rel="stylesheet" href="../assets/style.css" />
     <link rel="icon" href="../assets/logo.png" />
   </head>
   <body>
     <header>
-      <h1>Space School</h1>
+      <h1>Solar School</h1>
       <div class="topbar"></div>
     </header>
     <main class="container">
-      <h2>Astronuts Of Space</h2>
-      <p class="placeholder">Placeholder: Add content for this page.</p>
+      <article class="content-block">
+        <h2>Pioneers of the Void</h2>
+        <p>Humanity's journey into the solar system began with brave explorers who left our atmosphere to touch the stars.</p>
+        
+        <div class="action-grid">
+          <div class="action-card">
+            <h3>Yuri Gagarin</h3>
+            <p>The first human to orbit the Earth in 1961, aboard Vostok 1.</p>
+          </div>
+          <div class="action-card">
+            <h3>Neil Armstrong</h3>
+            <p>Commanded Apollo 11 and became the first person to walk on the Moon in 1969.</p>
+          </div>
+          <div class="action-card">
+            <h3>Valentina Tereshkova</h3>
+            <p>The first woman in space, completing 48 orbits of Earth in 1963.</p>
+          </div>
+        </div>
+
+        <section class="card" style="margin-top: 30px; background: var(--glass);">
+          <h3>Mission Statistics</h3>
+          <p>Over 600 people from 38 countries have traveled to space as of 2024. Most missions currently target the International Space Station (ISS), but upcoming Artemis missions aim for the Moon and Mars.</p>
+        </section>
+
+        <section id="quiz-form" class="card" data-module-id="astronauts">
+          <h3>Quick Check</h3>
+          <div class="quiz-question" data-answer="Apollo 11">
+            <p>Which mission landed the first humans on the Moon?</p>
+            <label><input type="radio" name="q1" value="Vostok 1"> Vostok 1</label><br>
+            <label><input type="radio" name="q1" value="Apollo 11"> Apollo 11</label><br>
+            <label><input type="radio" name="q1" value="Sputnik"> Sputnik</label>
+          </div>
+          <button type="submit" class="btn-primary" style="margin-top: 20px;">Submit Mission Log</button>
+        </section>
+      </article>
     </main>
     <footer><p>&copy; Space School </p></footer>
     <script type="module" src="/scripts/main.js"></script>
   </body>
 </html>
-

@@ -1,4 +1,4 @@
-# Space School - Architecture & Design Documentation
+# Solar School - Architecture & Design Documentation
 
 **Author**: Omar Mohamed Farouk  
 **Program**: International Baccalaureate (IB)  
@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-**Space School** is a modern, responsive web application built with Vanilla JavaScript, HTML5, and CSS3. It provides an educational platform focused on inspiring and educating users about space exploration and astronomy.
+**Solar School** is a modern, responsive web application built with Vanilla JavaScript, HTML5, and CSS3. It provides an educational platform focused on inspiring and educating users about space exploration and astronomy.
 
 ### Key Technologies
 - **Frontend**: Vanilla JS (ES6 modules), HTML5, CSS3
@@ -398,7 +398,7 @@ test('positionAuthPopover avoids viewport overflow')
 
 ## 14. Conclusion
 
-Space School demonstrates a modern, production-ready approach to building responsive web applications with progressive enhancement. The modular architecture, comprehensive error handling, and accessibility-first design make it a solid foundation for further development and scale.
+Solar School demonstrates a modern, production-ready approach to building responsive web applications with progressive enhancement. The modular architecture, comprehensive error handling, and accessibility-first design make it a solid foundation for further development and scale.
 
 **Built with**: Vanilla JavaScript, HTML5, CSS3, Firebase  
 **Status**: Production-ready (with recommended security updates)  

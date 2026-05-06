@@ -208,8 +208,8 @@ self.addEventListener('fetch', (event) => {
 							}
 							if (url.pathname === '/manifest.json') {
 								return new Response(JSON.stringify({
-									name: 'Space School',
-									short_name: 'Space School',
+									name: 'Solar School',
+									short_name: 'Solar School',
 									description: 'An educational platform to inspire and educate about space',
 									start_url: '/index.html',
 									display: 'standalone',

@@ -24,6 +24,14 @@ import {
 } from './auth.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
+// Global Title Sync
+document.title = `Solar School | ${document.title.split('|').pop().trim()}`;
+const brandH1 = document.querySelector('header h1');
+if (brandH1) brandH1.textContent = brandH1.textContent.replace('Space School', 'Solar School');
+
+/**
+ * Automated Horizontal Mode Support for Service Worker / Mobile
+ */
 /**
  * Initialize UI event handlers when DOM is ready.
  * Binds click/submit handlers to all authentication forms and buttons.
@@ -56,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const success = await saveUserGame({ title: missionTitle, config: JSON.parse(missionData) });
             if (success) {
-                window.UI.showToast('Mission Published to Galaxy!', 'success');
+                window.UI.showToast('Mission Published to Solar System!', 'success');
             }
             publishBtn.disabled = false;
             publishBtn.textContent = 'Publish Mission';
@@ -94,6 +102,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 			console.log("[Studio] Creation tool already active.");
 		} else {
 			window.location.href = '/pages/Courses/test/creationtool.html';
+			return;
+		}
+
+		// Create a basic Studio UI if we are on a page that supports it
+		const container = document.getElementById('studio-container') || document.querySelector('main');
+		if (container) {
+			container.innerHTML = `
+				<section class="content-block studio-interface">
+					<h2>🛠️ Mission Builder</h2>
+					<p>Welcome, Architect <strong>${user.displayName || 'Explorer'}</strong>. Create your custom solar mission below.</p>
+					<div class="card" style="background: var(--glass); padding: 20px;">
+						<input type="text" id="mission-title" placeholder="Mission Name (e.g., Nebula Run)" style="width:100%; margin-bottom:15px;">
+						<textarea id="mission-json" placeholder='{"difficulty": "hard", "entities": 50}' style="width:100%; height:150px; font-family: monospace; margin-bottom:15px;"></textarea>
+						<button id="publish-mission-btn" class="btn-primary" style="width:100%">Publish to Community</button>
+					</div>
+					<div id="studio-preview" style="margin-top:20px;"></div>
+				</section>
+			`;
+
+			// Re-bind the publish button since we just injected it
+			const pubBtn = document.getElementById('publish-mission-btn');
+			pubBtn.addEventListener('click', async () => {
+				const title = document.getElementById('mission-title').value;
+				const config = document.getElementById('mission-json').value;
+				if (!title || !config) return window.UI.showToast('Fill in all fields!', 'error');
+				
+				pubBtn.disabled = true;
+				const success = await saveUserGame({ title, config: JSON.parse(config) });
+				if (success) {
+					window.UI.showToast('Mission Published!', 'success');
+					pubBtn.disabled = false;
+				}
+			});
 		}
 	};
 
@@ -172,7 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 			// Share Link Logic
 			const shareBtn = document.getElementById('share-quiz-btn');
 			if (shareBtn) {
-				const shareText = encodeURIComponent(`I scored ${score}% on the ${moduleId.replace('_', ' ')} quiz at Space School! Can you beat my score? 🚀`);
+				const shareText = encodeURIComponent(`I scored ${score}% on the ${moduleId.replace('_', ' ')} quiz at Solar School! Can you beat my score? 🚀`);
 				const shareUrl = encodeURIComponent(window.location.href);
 				shareBtn.href = `https://wa.me/?text=${shareText}%20${shareUrl}`;
 			}
@@ -350,6 +391,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 			engine.mode = mode;
 			engine.reset();
 		};
+
+        // Fullscreen Toggle
+        const fsBtn = document.createElement('button');
+        fsBtn.textContent = 'Toggle Fullscreen 📺';
+        fsBtn.className = 'btn-ghost';
+        fsBtn.style.margin = '10px 0';
+        canvas.parentElement.insertBefore(fsBtn, canvas);
+        fsBtn.addEventListener('click', () => {
+            if (canvas.requestFullscreen) canvas.requestFullscreen();
+        });
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /**
- * @fileoverview UI Module - Configurable Topbar & Auth UI Injector
+ * @fileoverview Solar School UI System
  * Manages responsive navigation, authentication popover, accordion sections, and in-app routing.
  * 
  * CONFIGURATION:
@@ -28,11 +28,12 @@ import { getLeaderboard, auth, getPlayerStats, getUserRank } from './auth.js';
 const ALL_AVAILABLE_NAV_LINKS = [
   { label: 'Home', href: '/index.html', category: 'Core' },
   { label: 'Games', href: '/pages/games.html', category: 'Games' },
+  { label: 'Planets', href: '/pages/planets.html', category: 'Modules' },
   { label: 'Solar System', href: '/pages/solarsystem.html', category: 'Modules' },
-  { label: 'Lab', href: '/pages/lab.html', category: 'Modules' },
-  { label: 'FAQ', href: '/pages/faq.html', category: 'Other' },
-  { label: 'Privacy', href: '/pages/privacypolicy.html', category: 'Other' },
-  { label: 'Leaderboard', href: 'leaderboard.html', category: 'Other' },
+  { label: 'Lab', href: '/pages/lab.html', category: 'Core' },
+  { label: 'FAQ', href: '/pages/faq.html', category: 'Support' },
+  { label: 'Privacy', href: '/pages/privacypolicy.html', category: 'Support' },
+  { label: 'Leaderboard', href: 'leaderboard.html', category: 'Games' },
   { label: 'Settings', href: 'settings.html', category: 'Core' }
 ];
 
@@ -43,18 +44,18 @@ const defaultConfig = {
   navLinks: [
     { label: 'Home', href: '/index.html' },
     { label: 'Games', href: '/pages/games.html' },
-    { label: 'Solar System', href: '/pages/solarsystem.html' },
+    { label: 'Planets', href: '/pages/planets.html' },
     { label: 'Lab', href: '/pages/lab.html' },
-    { label: 'Settings', href: 'settings.html' }
+    { label: 'Settings', href: '/pages/settings.html' }
   ],
   // Auth accordion sections; reorder, remove, or add items here for customization
   actionCards: [
     { id: 'mission', title: 'Start Mission', desc: 'Pilot your rocket through the asteroid belt.', icon: '🚀', link: '/pages/spacemission.html', type: 'game2d' },
-    { id: 'solar', title: 'Solar Explorer', desc: 'Interact with high-fidelity 3D planetary models.', icon: '🪐', link: '/pages/solarsystem.html', type: 'viewer3d' },
+    { id: 'solar', title: 'Solar Hub', desc: 'Explore the origin of our solar system.', icon: '🪐', link: '/pages/solarsystem.html', type: 'viewer3d' },
     { id: 'lab', title: 'Virtual Lab', desc: 'Conduct experiments in zero gravity.', icon: '🧪', link: '/pages/lab.html', type: 'interactive' },
     { id: 'leaderboard', title: 'Leaderboard', desc: 'See how you rank against other explorers.', icon: '🏆', link: 'leaderboard.html', type: 'social' },
     { id: 'settings', title: 'Settings', desc: 'Customize your navigation and experience.', icon: '⚙️', link: 'settings.html', type: 'other' },
-    { id: 'academy', title: 'Space Academy', desc: 'Earn badges by completing courses.', icon: '🎓', link: '/pages/courses.html', type: 'path' },
+    { id: 'academy', title: 'Solar Academy', desc: 'Earn badges by completing courses.', icon: '🎓', link: '/pages/courses.html', type: 'path' },
     { id: 'studio', title: 'Game Studio', desc: 'Create and share your own space missions.', icon: '🛠️', link: 'studio.html', type: 'creative' }
   ],
   authSections: [
@@ -402,6 +403,15 @@ function renderTopbar(cfg = defaultConfig) {
   (function setupMobileMenu(){
     const authWrap = topbar.querySelector('.auth-topbar-wrap');
     let mobileBtn = topbar.querySelector('#mobileMenuBtn');
+    
+    // Mobile Modules Shortcut
+    const modBtn = document.createElement('button');
+    modBtn.className = 'btn-ghost mobile-only';
+    modBtn.textContent = '📚 Modules';
+    modBtn.style.marginRight = '10px';
+    modBtn.onclick = () => navigateTo('/pages/courses.html');
+    if (authWrap) topbar.insertBefore(modBtn, authWrap);
+
     if (!mobileBtn) {
       mobileBtn = document.createElement('button');
       mobileBtn.id = 'mobileMenuBtn';
