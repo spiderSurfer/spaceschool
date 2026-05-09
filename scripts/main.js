@@ -20,9 +20,12 @@ import {
 	saveModuleProgress,
 	trackEvent,
     getDashboardData,
-    saveUserGame
+    saveUserGame,
+    getMission,
+    db // Import db to check connection health
 } from './auth.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 // Global Title Sync
 document.title = `Solar School | ${document.title.split('|').pop().trim()}`;
@@ -41,9 +44,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pageName = window.location.pathname.split('/').pop() || 'home';
     trackEvent(`view_${pageName.replace('.html', '')}`);
 
+    // Database Connection Health Check
+    try {
+        // Attempt a simple read from a non-existent document to force a server roundtrip.
+        // This will fail if Firestore is unreachable, but not if the document simply doesn't exist.
+        await getDoc(doc(db, "SystemAnalytics", "connection_test"), { source: 'server' });
+    } catch (error) {
+        window.UI.showToast('Firestore connection lost. Some features may be unavailable.', 'error');
+    }
+
 	const statusEl = document.getElementById('auth-status');
 	const signOutBtn = document.getElementById('signOutBtn');
+    const statusElMobile = document.getElementById('auth-status-mobile');
+    const signOutBtnMobile = document.getElementById('signOutBtnMobile');
 	const googleBtn = document.getElementById('googleSignInBtn');
+
+    // UI Enhancement: Event delegation for dashboard actions
+    const dashboardGrid = document.getElementById('dashboard-grid');
+    if (dashboardGrid) {
+        dashboardGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.action-card');
+            if (card && card.dataset.href) {
+                window.UI.navigateTo(card.dataset.href);
+            }
+        });
+    }
 
     /**
      * Game Maker: Publish Mission
@@ -59,12 +84,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            let parsedMissionData;
+            try {
+                parsedMissionData = JSON.parse(missionData);
+            } catch (e) {
+                window.UI.showToast('Invalid JSON format for mission data.', 'error');
+                return;
+            }
+
             publishBtn.disabled = true;
             publishBtn.textContent = 'Syncing to Firebase...';
             
-            const success = await saveUserGame({ title: missionTitle, config: JSON.parse(missionData) });
-            if (success) {
+            const missionId = await saveUserGame({ title: missionTitle, config: parsedMissionData });
+            if (missionId) {
                 window.UI.showToast('Mission Published to Solar System!', 'success');
+                const testBtn = document.getElementById('test-mission-btn');
+                if (testBtn) {
+                    testBtn.style.display = 'block'; // Show the button
+                    testBtn.onclick = () => window.open(`/pages/spacemission.html?id=${missionId}`, '_blank');
+                }
+            } else {
+                window.UI.showToast('Failed to publish mission.', 'error');
             }
             publishBtn.disabled = false;
             publishBtn.textContent = 'Publish Mission';
@@ -385,12 +425,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// Auto-start game engine if canvas exists
 	const canvas = document.getElementById('space-canvas');
 	if (canvas) {
-		let engine = new SpaceGame2D('space-canvas', 'rocket');
-		// Add game selector logic
-		window.setGameMode = (mode) => {
-			engine.mode = mode;
-			engine.reset();
-		};
+        const urlParams = new URLSearchParams(window.location.search);
+        const missionId = urlParams.get('id');
+
+        let engine = new SpaceGame2D('space-canvas', 'rocket');
+
+        // Handle custom mission loading from Game Studio
+        if (missionId) {
+            window.UI.showToast('Downloading mission data...', 'info');
+            getMission(missionId).then(mission => {
+                if (mission && mission.config) {
+                    // Apply custom JSON config to engine
+                    if (typeof engine.applyConfig === 'function') {
+                        engine.applyConfig(mission.config);
+                    } else {
+                        // Fallback: manually map common JSON fields
+                        engine.speed = mission.config.speed || 5;
+                        engine.difficulty = mission.config.difficulty || 'normal';
+                    }
+                    window.UI.showToast(`Playing: ${mission.title}`, 'success');
+                }
+            });
+        }
+
+        window.setGameMode = (mode) => {
+            engine.mode = mode;
+            engine.reset();
+        };
 
         // Fullscreen Toggle
         const fsBtn = document.createElement('button');
@@ -430,10 +491,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 					? `Signed in: ${user.email || user.uid}` 
 					: 'Not signed in';
 			}
+            if (statusElMobile) {
+				statusElMobile.textContent = user 
+					? `Signed in: ${user.email || user.uid}` 
+					: 'Not signed in';
+			}
 
 			// Show/hide sign-out button based on auth state
 			if (signOutBtn) {
 				signOutBtn.style.display = user ? 'inline-block' : 'none';
+			}
+            if (signOutBtnMobile) {
+				signOutBtnMobile.style.display = user ? 'inline-block' : 'none';
 			}
 
 			/**
@@ -453,9 +522,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 					caret.textContent = ' ▾';
 					authToggle.appendChild(caret);
 				} else {
+                    // If the user signs out, ensure the avatar is removed
+                    const existingImg = authToggle.querySelector('.topbar-avatar');
+                    if (existingImg) {
+                        existingImg.remove();
+                    }
 					authToggle.textContent = 'Account ▾';
 				}
 			}
+
+            // Wire mobile sign out button
+            if (signOutBtnMobile) {
+                signOutBtnMobile.addEventListener('click', async () => {
+                    await signOutUser();
+                });
+            }
 		} catch (error) {
 			console.error('[Main] Auth state change handler error:', error);
 		}

@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Solar School | Solar System, Facts, Why do we learn it, and how to explore it</title>
+    <title>Solar School | Solar System Hub</title>
     <link rel="stylesheet" href="/assets/style.css" />
-    <link rel="icon" href="assets/logo.png" />
+    <link rel="stylesheet" href="/assets/dashboard-theme.css" />
+    <link rel="icon" href="/assets/logo.png" />
     <!-- <meta name="description" content="Add a short summary here" /> -->
   </head>
   <body>
@@ -18,10 +19,28 @@
     </header>
 
     <main class="container">
-        <!-- Example: /pages/Courses/test/astronomy.html -->
         <section class="content-block">
-            <h2>What is the solar system</h2>
+            <h2>Explore Our Cosmic Neighborhood</h2>
+            <p>The Solar System consists of the Sun and everything that orbits around it, including eight planets, their moons, dwarf planets, and countless small bodies such as asteroids and comets.</p>
         </section>
+
+        <div class="action-grid">
+            <div class="action-card" onclick="location.href='/pages/sun.html'">
+                <div style="font-size: 2.5rem;">☀️</div>
+                <h3>The Sun</h3>
+                <p>The massive star at the center that holds everything together.</p>
+            </div>
+            <div class="action-card" onclick="location.href='/pages/planets.html'">
+                <div style="font-size: 2.5rem;">🪐</div>
+                <h3>The Planets</h3>
+                <p>From tiny Mercury to the gas giant Neptune.</p>
+            </div>
+            <div class="action-card" onclick="location.href='/pages/dwarfplanets.html'">
+                <div style="font-size: 2.5rem;">🌑</div>
+                <h3>Dwarf Planets</h3>
+                <p>Small worlds like Pluto and Ceres that orbit in the shadows.</p>
+            </div>
+        </div>
     </main>
 
     <footer>

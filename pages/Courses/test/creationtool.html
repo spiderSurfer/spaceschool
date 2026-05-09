@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Solar School | Mission Builder</title>
+    <link rel="stylesheet" href="../../../assets/style.css" />
+    <link rel="icon" href="../../../assets/logo.png" />
+  </head>
+  <body>
+    <header>
+      <div class="site-brand">
+        <a href="/index.html"><img src="/assets/logo.png" width="20" height="20" alt="Solar School logo" class="logo" /></a>
+        <h1>Solar School | Game Studio</h1>
+      </div>      
+      <div id="topbar"></div>    
+    </header>
+
+    <main class="container">
+      <article class="content-block">
+        <h2>🛠️ Solar Architect</h2>
+        <p>Design your own interactive mission. Define the difficulty and entities to challenge other students.</p>
+
+        <div class="card" style="background: var(--glass); padding: 25px; margin-top: 20px;">
+            <label for="mission-title">Mission Name</label>
+            <input type="text" id="mission-title" placeholder="e.g., Andromeda Escape" style="width:100%; margin-bottom:20px; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass); color: white;">
+            
+            <label for="mission-json">Mission Configuration (JSON)</label>
+            <textarea id="mission-json" placeholder='{"difficulty": "expert", "speed": 10, "entities": ["asteroid", "star"]}' style="width:100%; height:150px; font-family: monospace; margin-bottom:20px; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass); color: #8be38b;"></textarea>
+            
+            <button id="publish-mission-btn" class="btn-primary" style="width:100%; padding: 15px; font-size: 1.1rem;">🚀 Sync to Solar System</button>
+            <button id="test-mission-btn" class="btn-ghost" style="width:100%; padding: 15px; font-size: 1.1rem; margin-top: 10px; display: none;">🧪 Test Mission</button>
+        </div>
+      </article>
+    </main>
+
+    <footer>
+      <p>&copy; Solar School</p>
+    </footer>
+
+    <script type="module" src="/scripts/main.js"></script>
+  </body>
+</html>

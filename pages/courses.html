@@ -3,15 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Solar School � PLACEHOLDER</title>
+    <title>Solar School | The Academy</title>
     <link rel="stylesheet" href="../assets/style.css" />
+    <link rel="stylesheet" href="../assets/dashboard-theme.css" />
     <link rel="icon" href="../assets/logo.png" />
   </head>
-  <body>
+<body>
     <header>
-      <div class="topbar"></div>
+        <h1>Courses</h1>
+        <div class="topbar"></div>
     </header>
+
     <main class="container">
+      <section class="content-block">
+        <h2>Apps</h2>
+        <div id="cardy"><a href="/pages/games.html"><h3>Games</h3><br><p></p></a></div>
+        <div id="cardy"><a href="/pages/games.html"><h3>Mission</h3><br><p>Test your skills in our interactive simulations.</p></a></div>
+      </section>
       <section class="content-block">
         <h2>Space Academy Curriculum</h2>
         <p>Master the secrets of the cosmos through our structured learning paths. Complete quizzes to earn badges and Cosmic Coins.</p>
@@ -29,8 +37,38 @@
           </div>
         </div>
       </section>
+        <section class="content-block">
+            <h2>🎓 Solar Academy Modules</h2>
+            <p>Complete these learning paths to earn Cosmic Coins and advance your rank.</p>
+
+            <div class="action-grid" style="margin-top: 30px;">
+                <div class="action-card" onclick="location.href='/pages/solarsystem.html'">
+                    <div style="font-size: 2rem;">🪐</div>
+                    <h3>System Foundations</h3>
+                    <p>Learn about the Sun and the eight major planets.</p>
+                    <span class="muted">Status: Available</span>
+                </div>
+                <div class="action-card" onclick="location.href='/pages/astronuts.html'">
+                    <div style="font-size: 2rem;">👨‍🚀</div>
+                    <h3>Human Pioneers</h3>
+                    <p>Study the history of astronautics and famous missions.</p>
+                    <span class="muted">Status: Available</span>
+                </div>
+                <div class="action-card">
+                    <div style="font-size: 2rem;">🔭</div>
+                    <h3>Deep Space</h3>
+                    <p>Explore nebulae, black holes, and distant galaxies.</p>
+                    <span class="muted">Status: Locked (Rank 5)</span>
+                </div>
+            </div>
+        </section>
+
+        <aside class="card">
+            <h3>Academy Rankings</h3>
+            <div id="dashboard-grid-widgets"></div>
+        </aside>
     </main>
     <footer><p>&copy; Solar School</p></footer>
     <script type="module" src="/scripts/main.js"></script>
-  </body>
+</body>
 </html>

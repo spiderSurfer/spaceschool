@@ -203,10 +203,25 @@ function updateHeaderHeight(headerSel = defaultConfig.headerSelector) {
   try {
     const header = qs(headerSel);
     if (!header) return;
-    const h = header.getBoundingClientRect().height;
-    document.documentElement.style.setProperty('--header-height', `${Math.round(h)}px`);
-    const pop = qs('.auth-popover');
-    if (pop) pop.style.top = `${Math.round(h + 8)}px`;
+    
+    // Use ResizeObserver for high-performance layout tracking
+    if (!window._headerObserver) {
+      window._headerObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+          const height = entry.contentRect.height;
+          document.documentElement.style.setProperty('--header-height', `${Math.round(height)}px`); // Use Math.round for pixel values
+          const pop = qs('.auth-popover');
+          if (pop) pop.style.top = `${Math.round(height + 8)}px`;
+        }
+      });
+      window._headerObserver.observe(header);
+    }
+
+    // Immediate update for first run
+    const rect = header.getBoundingClientRect();
+    document.documentElement.style.setProperty('--header-height', `${Math.round(rect.height)}px`);
+    const pop = qs('.auth-popover'); // This might be null if on mobile and popover is not rendered
+    if (pop) pop.style.top = `${Math.round(rect.height + 8)}px`;
   } catch (error) {
     console.error('[UI] Error updating header height:', error);
   }
@@ -400,86 +415,9 @@ function renderTopbar(cfg = defaultConfig) {
   topbar.insertAdjacentHTML('beforeend', themeToggle + buildNavHTML(cfg) + buildAuthHTML(cfg));
 
   // Mobile menu button and overlay for small screens
-  (function setupMobileMenu(){
-    const authWrap = topbar.querySelector('.auth-topbar-wrap');
-    let mobileBtn = topbar.querySelector('#mobileMenuBtn');
-    
-    // Mobile Modules Shortcut
-    const modBtn = document.createElement('button');
-    modBtn.className = 'btn-ghost mobile-only';
-    modBtn.textContent = '📚 Modules';
-    modBtn.style.marginRight = '10px';
-    modBtn.onclick = () => navigateTo('/pages/courses.html');
-    if (authWrap) topbar.insertBefore(modBtn, authWrap);
+  setupCommandCenterDrawer(cfg);
 
-    if (!mobileBtn) {
-      mobileBtn = document.createElement('button');
-      mobileBtn.id = 'mobileMenuBtn';
-      mobileBtn.className = 'mobile-menu-btn';
-      mobileBtn.setAttribute('aria-label', 'Open menu');
-      mobileBtn.setAttribute('aria-expanded', 'false');
-      if (authWrap) topbar.insertBefore(mobileBtn, authWrap); else topbar.appendChild(mobileBtn);
-    }
-
-    // Create an overlay clone of the nav for mobile
-    let mobileOverlay = document.querySelector('.mobile-nav-overlay');
-    const navEl = topbar.querySelector('.topbar-links');
-    if (!mobileOverlay && navEl) {
-      mobileOverlay = document.createElement('div');
-      mobileOverlay.className = 'mobile-nav-overlay';
-      mobileOverlay.innerHTML = navEl.outerHTML;
-      document.body.appendChild(mobileOverlay);
-    }
-
-    if (mobileBtn && mobileOverlay) {
-      mobileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const opened = mobileOverlay.classList.toggle('open');
-        mobileBtn.setAttribute('aria-expanded', opened ? 'true' : 'false');
-      });
-
-      mobileOverlay.addEventListener('click', (ev) => {
-        const link = ev.target.closest('.topbar-link');
-        if (link) {
-          const href = link.getAttribute('href') || '';
-          if (!href.startsWith('http') && !href.startsWith('#')) {
-            ev.preventDefault(); navigateTo(href);
-          } else if (href.startsWith('#')) {
-            // let anchors behave normally
-          } else {
-            window.location.href = href;
-          }
-          mobileOverlay.classList.remove('open');
-          mobileBtn.setAttribute('aria-expanded', 'false');
-        } else if (ev.target === mobileOverlay) {
-          mobileOverlay.classList.remove('open');
-          mobileBtn.setAttribute('aria-expanded', 'false');
-        }
-      });
-
-      // also wire cloned links for SPA navigation
-      mobileOverlay.querySelectorAll('.topbar-link').forEach(a => {
-        a.addEventListener('click', (e) => {
-          const href = a.getAttribute('href');
-          if (!href || href.startsWith('http') || href.startsWith('#')) return;
-          e.preventDefault(); navigateTo(href);
-          mobileOverlay.classList.remove('open');
-          mobileBtn.setAttribute('aria-expanded', 'false');
-        });
-      });
-
-      window.addEventListener('resize', () => {
-        if (window.innerWidth > (cfg.hideNavBelowWidth || 700)) {
-          if (mobileOverlay.classList.contains('open')) {
-            mobileOverlay.classList.remove('open');
-            mobileBtn.setAttribute('aria-expanded', 'false');
-          }
-        }
-      });
-    }
-  })();
-
-  // intercept nav links for in-app routes
+  // intercept nav links for in-app routes (for desktop nav)
   qsa(`${cfg.topbarSelector} .topbar-link`).forEach(a => {
     a.addEventListener('click', (e) => {
       const href = a.getAttribute('href');
@@ -492,8 +430,18 @@ function renderTopbar(cfg = defaultConfig) {
   const toggle = wrap.querySelector('#authToggle'); const popover = wrap.querySelector('#authPopover');
 
   updateHeaderHeight();
-  window.addEventListener('resize', () => updateHeaderHeight(cfg.headerSelector));
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => updateHeaderHeight(cfg.headerSelector));
+
+  // Centralized navigation event delegation for better performance and security
+  topbar.addEventListener('click', (e) => {
+    const link = e.target.closest('.topbar-link');
+    if (link) {
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('#')) return;
+      e.preventDefault();
+      navigateTo(href);
+    }
+  });
 
   // accordion initial state
   wrap.querySelectorAll('.acc-body').forEach(b => b.style.maxHeight = '0px');
@@ -503,10 +451,19 @@ function renderTopbar(cfg = defaultConfig) {
   toggle.addEventListener('click', (ev) => { ev.stopPropagation(); updateHeaderHeight(cfg.headerSelector); toggleAuthPopover(); });
 
   // close when clicking outside
-  document.addEventListener('click', (ev) => { if (!wrap.contains(ev.target)) closeAuthPopover(); });
+  document.addEventListener('click', (ev) => { 
+    if (!wrap.contains(ev.target) && !qs('.command-center-drawer')?.contains(ev.target)) {
+      closeAuthPopover(); 
+    }
+  });
 
   // keyboard close
-  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeAuthPopover(); });
+  document.addEventListener('keydown', (ev) => { 
+    if (ev.key === 'Escape') {
+      closeAuthPopover(); 
+      closeCommandCenterDrawer();
+    }
+  });
 
   // accordion toggles
   wrap.querySelectorAll('.acc-toggle').forEach(btn => {
@@ -520,6 +477,113 @@ function renderTopbar(cfg = defaultConfig) {
   });
 
   return topbar;
+}
+
+/**
+ * Renders and sets up the Command Center side drawer for mobile.
+ * @param {Object} cfg - Configuration object
+ */
+function setupCommandCenterDrawer(cfg) {
+  const topbar = qs(cfg.topbarSelector);
+  if (!topbar) return;
+
+  let mobileBtn = topbar.querySelector('#mobileMenuBtn');
+  if (!mobileBtn) {
+    mobileBtn = document.createElement('button');
+    mobileBtn.id = 'mobileMenuBtn';
+    mobileBtn.className = 'mobile-menu-btn';
+    mobileBtn.setAttribute('aria-label', 'Open Command Center');
+    mobileBtn.setAttribute('aria-expanded', 'false');
+    topbar.insertBefore(mobileBtn, topbar.firstChild); // Place at the beginning of the topbar
+  }
+
+  // Create the drawer and overlay elements
+  let drawer = qs('.command-center-drawer');
+  let overlay = qs('.command-center-overlay');
+
+  if (!drawer) {
+    drawer = document.createElement('div');
+    drawer.className = 'command-center-drawer';
+    drawer.innerHTML = `
+      <div class="drawer-header">
+        <h2 style="margin:0; color: var(--accent);">Command Center</h2>
+        <button class="btn-ghost" id="closeDrawerBtn" aria-label="Close menu">✖</button>
+      </div>
+      <div class="drawer-nav-links">
+        ${cfg.navLinks.map(l => `<a href="${resolvePath(l.href)}" class="topbar-link">${l.label}</a>`).join('')}
+      </div>
+      <div class="drawer-footer">
+        <div id="auth-status-mobile" style="margin-bottom: 10px;">Not signed in</div>
+        <button id="signOutBtnMobile" class="btn-primary" style="display:none; width:100%;">Sign Out</button>
+        <button id="themeToggleMobile" class="btn-ghost" style="width:100%; margin-top: 10px;">🌙 Toggle Theme</button>
+      </div>
+    `;
+    document.body.appendChild(drawer);
+
+    overlay = document.createElement('div');
+    overlay.className = 'command-center-overlay';
+    document.body.appendChild(overlay);
+
+    // Wire events for drawer links
+    drawer.querySelectorAll('.topbar-link').forEach(a => {
+        a.addEventListener('click', (e) => {
+          const href = a.getAttribute('href');
+          if (!href || href.startsWith('http') || href.startsWith('#')) return;
+          e.preventDefault(); navigateTo(href);
+          closeCommandCenterDrawer();
+        });
+      });
+  }
+
+  // Event listeners for the drawer
+  mobileBtn.addEventListener('click', openCommandCenterDrawer);
+  qs('#closeDrawerBtn')?.addEventListener('click', closeCommandCenterDrawer);
+  overlay.addEventListener('click', closeCommandCenterDrawer);
+
+  // Theme toggle inside drawer
+  qs('#themeToggleMobile')?.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+  });
+
+  // Close drawer on resize if it's open and screen size goes above mobile breakpoint
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > (cfg.hideNavBelowWidth || 700) && drawer.classList.contains('open')) {
+      closeCommandCenterDrawer();
+    }
+  });
+}
+
+/**
+ * Opens the Command Center side drawer.
+ */
+function openCommandCenterDrawer() {
+  const drawer = qs('.command-center-drawer');
+  const overlay = qs('.command-center-overlay');
+  const mobileBtn = qs('#mobileMenuBtn');
+  if (drawer && overlay && mobileBtn) {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    mobileBtn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('no-scroll'); // Prevent scrolling main content
+    closeAuthPopover(); // Ensure auth popover is closed
+  }
+}
+
+/**
+ * Closes the Command Center side drawer.
+ */
+function closeCommandCenterDrawer() {
+  const drawer = qs('.command-center-drawer');
+  const overlay = qs('.command-center-overlay');
+  const mobileBtn = qs('#mobileMenuBtn');
+  if (drawer && overlay && mobileBtn) {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    mobileBtn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('no-scroll');
+  }
 }
 
 /**
@@ -840,11 +904,11 @@ function initThemeToggle() {
   const toggle = qs('#themeToggle');
   if (!toggle) return;
 
-  // Get saved theme or default to dark
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  setTheme(savedTheme);
+  // Get saved theme or default to dark (handled in setTheme)
+  setTheme(localStorage.getItem('theme') || 'dark');
 
-  toggle.addEventListener('click', () => {
+  // Event listener for desktop theme toggle
+  toggle.addEventListener('click', () => { 
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
@@ -859,6 +923,11 @@ function setTheme(theme) {
     toggle.textContent = theme === 'dark' ? '🌙' : '☀️';
     toggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
   }
+  const mobileToggle = qs('#themeToggleMobile');
+  if (mobileToggle) {
+    toggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+    toggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+  }
 }
 
 /**
@@ -870,11 +939,11 @@ function renderActionCards(containerSelector = '#dashboard-grid') {
   if (!container) return;
   
   container.innerHTML = `<div class="action-grid">` + defaultConfig.actionCards.map(card => `
-    <div class="action-card" onclick="window.UI.navigateTo('${card.link}')">
-      <div style="font-size: 3rem;">${card.icon}</div>
+    <div class="action-card glass-panel" data-href="${card.link}">
+      <div class="card-icon">${card.icon}</div>
       <h3>${card.title}</h3>
       <p>${card.desc}</p>
-      <div class="btn-primary" style="margin-top:auto; text-align:center; padding: 10px; border-radius: 8px; background: var(--accent); color: var(--bg); font-weight: bold;">Launch</div>
+      <button class="btn-primary">Launch Mission</button>
     </div>
   `).join('') + `</div>`;
 }
@@ -899,12 +968,12 @@ function renderDashboardWidgets(data) {
   const displayWidgets = allWidgets.slice(0, 3);
 
   container.innerHTML = `
-    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+    <div class="stats-grid">
       ${displayWidgets.map(w => `
-        <div class="stat-card" style="background: var(--glass); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
-          <div style="font-size: 2rem; margin-bottom: 10px;">${w.icon}</div>
-          <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase;">${w.label}</div>
-          <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">${w.val}</div>
+        <div class="stat-card glass-panel">
+          <div class="stat-icon">${w.icon}</div>
+          <div class="stat-label">${w.label}</div>
+          <div class="stat-value">${w.val}</div>
         </div>
       `).join('')}
     </div>

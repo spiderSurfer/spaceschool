@@ -90,7 +90,13 @@ export class SpaceGame2D {
             if (this.gameOver) { this.reset(); return; }
             const rect = this.canvas.getBoundingClientRect();
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            this.player.y = clientY - rect.top;
+            
+            // Calculate scale factor between CSS pixels and internal canvas resolution
+            const scaleY = this.canvas.height / rect.height;
+            
+            // Map viewport coordinates to canvas internal coordinates
+            this.player.y = (clientY - rect.top) * scaleY;
+
             // 3D Tilt effect
             const tilt = (this.player.y / this.canvas.height - 0.5) * 10;
             this.canvas.style.transform = `rotateX(${-tilt}deg)`;
@@ -101,6 +107,17 @@ export class SpaceGame2D {
         this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); input(e); }, {passive: false});
 
         this.loop();
+    }
+
+    /**
+     * Applies custom mission JSON configuration to the engine
+     * @param {Object} config 
+     */
+    applyConfig(config) {
+        if (!config) return;
+        this.customSpeed = config.speed || 5;
+        this.customDifficulty = config.difficulty || 'normal';
+        this.allowedEntities = config.entities || ['asteroid', 'star'];
     }
 
     reset() {
@@ -125,22 +142,32 @@ export class SpaceGame2D {
     }
 
     spawn() {
-        if (Math.random() > 0.97) {
-            const levelFactor = 1 + (this.level - 1) * 0.25; // 25% speed increase per level
+        const spawnChance = this.customDifficulty === 'expert' ? 0.94 : 0.97;
+        
+        if (Math.random() > spawnChance) {
+            const baseSpeed = this.customSpeed || 5;
+            const levelFactor = 1 + (this.level - 1) * 0.2; 
             const size = this.mode === 'rocket' ? (15 + Math.random() * 20) : 10;
-            // Pre-generate jagged edges for asteroids to avoid flickering
+
             const vertices = [];
             if (this.mode === 'rocket') {
                 for (let i = 0; i < 8; i++) {
                     vertices.push(0.8 + Math.random() * 0.4);
                 }
             }
+
+            // Filter entities based on config if provided
+            let type = this.mode === 'rocket' ? 'asteroid' : 'star';
+            if (this.allowedEntities && !this.allowedEntities.includes(type)) {
+                type = this.allowedEntities[0]; // Fallback to first allowed type
+            }
+
             this.entities.push({
                 x: this.canvas.width,
                 y: Math.random() * this.canvas.height,
                 size: size,
-                speed: (3 + Math.random() * 5) * levelFactor,
-                type: this.mode === 'rocket' ? 'asteroid' : 'star',
+                speed: (baseSpeed * (0.6 + Math.random() * 0.8)) * levelFactor,
+                type: type,
                 vertices: vertices
             });
         }

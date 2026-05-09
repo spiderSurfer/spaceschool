@@ -3,21 +3,31 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Solar School � PLACEHOLDER</title>
+    <title>Solar School | Space Mission</title>
     <link rel="stylesheet" href="../assets/style.css" />
+    <link rel="stylesheet" href="../assets/dashboard-theme.css" />
     <link rel="icon" href="../assets/logo.png" />
   </head>
   <body>
     <header>
-      <h1>Solar School</h1>
-      <nav><a href="../index.html">Home</a></nav>
+      <h1>Space Mission</h1>
+      <div class="topbar"></div>
     </header>
+
     <main class="container">
-      <h2>PLACEHOLDER</h2>
-      <p class="placeholder">Placeholder: Add content for this page.</p>
+      <section class="content-block">
+        <h2>Rocket Pilot: Asteroid Belt</h2>
+        <p>Pilot your rocket through the dangerous asteroid belt. Avoid obstacles and collect star power-ups!</p>
+        
+        <div style="background: var(--bg); border-radius: 20px; overflow: hidden; border: 1px solid var(--glass); margin-top: 20px; position: relative;">
+            <canvas id="space-canvas" style="width: 100%; height: 400px; display: block;"></canvas>
+        </div>
+        <p class="muted" style="margin-top: 10px;">Controls: Use your mouse or touch to move the rocket up and down.</p>
+      </section>
     </main>
+
     <footer><p>&copy; Solar School</p></footer>
+
     <script type="module" src="/scripts/main.js"></script>
   </body>
 </html>
-

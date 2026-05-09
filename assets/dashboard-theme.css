@@ -1,0 +1,223 @@
+/**
+ * Solar School - High Fidelity Dashboard Theme
+ * Glassmorphism + Space Animations
+ */
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(12px);
+  --accent-glow: 0 0 25px rgba(109, 211, 255, 0.25);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Glassmorphism Base */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Stats Grid Enhancements */
+.stats-grid .stat-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stats-grid .stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(109, 211, 255, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+  animation: drift 10s infinite alternate linear;
+}
+
+/* Action Cards Enhancements */
+.action-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 260px;
+}
+
+.action-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: var(--accent);
+  box-shadow: var(--accent-glow);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.action-card .card-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 10px rgba(109, 211, 255, 0.4));
+  animation: float 6s ease-in-out infinite;
+}
+
+.action-card h3 {
+  color: var(--accent);
+  margin: 0.5rem 0;
+  font-weight: 700;
+}
+
+.action-card p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Space Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes drift {
+  from { transform: rotate(0deg) translate(5%, 5%); }
+  to { transform: rotate(360deg) translate(-5%, -5%); }
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 10px rgba(109, 211, 255, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(109, 211, 255, 0.5); }
+  100% { box-shadow: 0 0 10px rgba(109, 211, 255, 0.2); }
+}
+
+/* Custom Button Shine Effect */
+.action-card .btn-primary {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  width: 100%;
+  margin-top: auto;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+/* Command Center Drawer for Mobile */
+.command-center-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 80%; /* Adjust as needed, max-width for larger phones */
+  max-width: 350px; /* Limit width on larger mobile devices */
+  height: 100vh;
+  z-index: 1000;
+  transform: translateX(100%); /* Start off-screen */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+
+  /* Glassmorphism styles */
+  background: rgba(255, 255, 255, 0.05); /* Slightly more opaque for readability */
+  backdrop-filter: blur(20px); /* Stronger blur for the drawer */
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: -8px 0 32px 0 rgba(0, 0, 0, 0.6);
+}
+
+.command-center-drawer.open {
+  transform: translateX(0); /* Slide in */
+}
+
+.command-center-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6); /* Darker overlay */
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none; /* Allow clicks through when hidden */
+  transition: opacity 0.4s ease-out;
+}
+
+.command-center-overlay.open {
+  opacity: 1;
+  pointer-events: auto; /* Block clicks when open */
+}
+
+.command-center-drawer .drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.command-center-drawer .drawer-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.command-center-drawer .drawer-nav-links .topbar-link {
+  font-size: 1.2rem;
+  padding: 10px 0;
+  color: var(--text);
+  transition: color 0.2s ease;
+}
+
+.command-center-drawer .drawer-nav-links .topbar-link:hover {
+  color: var(--accent);
+}
+
+.command-center-drawer .drawer-footer {
+  margin-top: auto; /* Push to bottom */
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+/* Hide regular topbar links on small screens */
+@media (max-width: 700px) { /* Use the hideNavBelowWidth breakpoint */
+  .topbar-links {
+    display: none;
+  }
+  .mobile-menu-btn {
+    display: block !important; /* Ensure button is visible */
+  }
+  .auth-topbar-wrap {
+    display: none; /* Hide regular auth toggle on mobile */
+  }
+}
+
+/* Ensure the mobile menu button is hidden on larger screens */
+@media (min-width: 701px) {
+  .mobile-menu-btn {
+    display: none !important;
+  }
+  .command-center-drawer, .command-center-overlay {
+    display: none !important;
+  }
+}

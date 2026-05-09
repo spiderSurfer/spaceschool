@@ -3,21 +3,46 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Solar School � PLACEHOLDER</title>
+    <title>Solar School | Virtual Space Lab</title>
     <link rel="stylesheet" href="../assets/style.css" />
+    <link rel="stylesheet" href="../assets/dashboard-theme.css" />
     <link rel="icon" href="../assets/logo.png" />
   </head>
   <body>
     <header>
-      <h1>Solar School</h1>
-      <nav><a href="../index.html">Home</a></nav>
+      <h1>Lab</h1>
+      <div class="topbar"></div>
     </header>
     <main class="container">
-      <h2>PLACEHOLDER</h2>
-      <p class="placeholder">Placeholder: Add content for this page.</p>
+      <section class="content-block">
+        <h2>Virtual Space Lab</h2>
+        <p>Conduct experiments and analyze cosmic data in our zero-gravity simulator.</p>
+      </section>
+
+      <div class="action-grid">
+        <div class="card" style="background: var(--glass); padding: 20px; text-align: center;">
+          <div style="font-size: 3rem;">🧪</div>
+          <h3>Atmosphere Tester</h3>
+          <p>Analyze the chemical composition of planetary atmospheres.</p>
+          <button class="btn-ghost" onclick="window.UI.showToast('Lab simulation starting...', 'info')">Calibrate Sensors</button>
+        </div>
+        
+        <div class="card" style="background: var(--glass); padding: 20px; text-align: center;">
+          <div style="font-size: 3rem;">📡</div>
+          <h3>Radio Telescope</h3>
+          <p>Listen for signals from distant pulsars and galaxies.</p>
+          <button class="btn-ghost" onclick="window.UI.showToast('Scanning frequencies...', 'info')">Begin Scan</button>
+        </div>
+
+        <div class="card" style="background: var(--glass); padding: 20px; text-align: center;">
+          <div style="font-size: 3rem;">⚖️</div>
+          <h3>Gravity Well</h3>
+          <p>Simulate how mass warps spacetime around a black hole.</p>
+          <button class="btn-ghost" onclick="location.href='/pages/blackhole.html'">View 3D Model</button>
+        </div>
+      </div>
     </main>
     <footer><p>&copy; Solar School</p></footer>
     <script type="module" src="/scripts/main.js"></script>
   </body>
 </html>
-

@@ -11,6 +11,8 @@
  * --h1-size: Responsive heading size
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
 	--bg: #071026;
 	--card: #0f2340;

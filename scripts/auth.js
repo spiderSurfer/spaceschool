@@ -15,10 +15,12 @@
  * For local development, use .env.local (never commit to version control).
  */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
@@ -68,20 +70,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-// Enable offline persistence for PWA support
-if (typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code == 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time.
-      console.warn('[Firestore] Persistence failed: Multiple tabs open');
-    } else if (err.code == 'unimplemented') {
-      // The current browser does not support all of the features required to enable persistence
-      console.warn('[Firestore] Persistence unimplemented');
-    }
-  });
-}
+// Modern Firestore initialization with persistent cache (replacing deprecated method)
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 
 /**
  * Sign in with Google using OAuth 2.0 popup flow.
@@ -211,24 +206,22 @@ export async function updateGameStats(stats) {
   const statsRef = doc(db, "GameStats", uid);
 
   try {
-    // Using setDoc with { merge: true } is more robust for offline scenarios
-    // as it combines the creation and update logic into a single operation
-    // that Firestore can easily queue.
-    
-    const currentStats = await getDoc(statsRef).catch(() => null);
-    const currentHighScore = currentStats?.exists() ? (currentStats.data().highScore || 0) : 0;
+    // Refined to minimize network overhead and handle high scores correctly
+    const currentDoc = await getDoc(statsRef);
+    const currentHighScore = currentDoc.exists() ? (currentDoc.data().highScore || 0) : 0;
 
     const dataToUpdate = {
       userId: uid,
+      lastUpdated: serverTimestamp(),
       coins: increment(stats.coins || 0),
       totalQuestionsAnswered: increment(stats.questions || 0),
       correctAnswers: increment(stats.correct || 0),
       highScore: Math.max(currentHighScore, stats.score || 0)
     };
 
-    // If document doesn't exist, provide initial values for new fields
-    if (!currentStats?.exists()) {
-      dataToUpdate.planetsDiscovered = stats.planets || 0;
+    // Add metadata for new users
+    if (!currentDoc.exists()) {
+      dataToUpdate.planetsDiscovered = 0;
       dataToUpdate.constellationsUnlocked = 0;
     }
 
@@ -348,10 +341,25 @@ export async function saveUserGame(missionData) {
         // Reward for creative contribution
         await updateGameStats({ coins: 50 });
         
-        return true;
+        return docRef.id; // Return the ID of the newly created document
     } catch (e) {
         console.error("[Studio] Save failed:", e);
         return false;
+    }
+}
+
+/**
+ * Fetch a specific custom mission by ID
+ * @param {string} missionId 
+ */
+export async function getMission(missionId) {
+    try {
+        const docRef = doc(db, "UserGames", missionId);
+        const snap = await getDoc(docRef);
+        return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    } catch (e) {
+        console.error("[Auth] Error fetching mission:", e);
+        return null;
     }
 }
 
